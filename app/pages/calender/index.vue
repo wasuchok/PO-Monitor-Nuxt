@@ -24,6 +24,29 @@
                         กลับไปวันนี้
                     </button>
                 </div>
+                <div class="space-y-4">
+                    <div v-if="upcomingEntries.length" class="space-y-3">
+                        <article v-for="(entry, index) in upcomingEntries"
+                            :key="entry.po_no ?? `upcoming-${index}`"
+                            class="flex flex-col gap-2 rounded-xl border border-neutral-100 p-3 shadow-sm ring-1 ring-black/5 transition hover:border-primary-200">
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-semibold text-neutral-700">{{ entry.po_no || 'PO -' }}</p>
+                                <span class="text-[11px] font-semibold text-primary-500">
+                                    {{ getStatusLabel(entry.status) }}
+                                </span>
+                            </div>
+                            <p class="text-xs text-neutral-500">
+                                <span class="font-medium text-neutral-700">{{ formatThaiDate(entry.po_date) }}</span>
+                                <span class="text-neutral-300">•</span>
+                                <span class="text-neutral-500">{{ entry.division || 'ทุก Division' }}</span>
+                            </p>
+                        </article>
+                    </div>
+                    <div v-else
+                        class="rounded-xl border border-dashed border-neutral-200 bg-neutral-50 p-4 text-center text-xs text-neutral-400">
+                        ยังไม่มีรายการกำลังจะถึง
+                    </div>
+                </div>
             </aside>
         </div>
     </section>
@@ -69,12 +92,19 @@ const STATUS_COLOR_LOOKUP: Record<number, CalendarEvent['color']> = {
     2: 'blue',
     3: 'green',
 }
+const MAX_UPCOMING_ITEMS = 5
+const thaiDateFormatter = new Intl.DateTimeFormat('th-TH', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+})
 
 const { apiPublic } = useApi()
 const selectedDate = ref(new Date())
 const isCalendarLoading = ref(false)
 
 const poEvents = ref<CalendarEvent[]>([])
+const upcomingEntries = ref<CalendarEntry[]>([])
 
 const getStatusLabel = (status?: number | null) =>
     STATUS_LABEL_LOOKUP[status ?? 0] ?? 'Unknown'
@@ -107,6 +137,7 @@ const fetchCalendarEntries = async (date: Date = selectedDate.value) => {
         })
 
         const entries = Array.isArray(response?.data) ? response.data : []
+        updateUpcomingEntries(entries)
         poEvents.value = entries
             .filter((entry) => Boolean(entry.po_date))
             .map((entry, index) => {
@@ -131,6 +162,38 @@ const fetchCalendarEntries = async (date: Date = selectedDate.value) => {
     } finally {
         isCalendarLoading.value = false
     }
+}
+
+const updateUpcomingEntries = (entries: CalendarEntry[]) => {
+    if (!Array.isArray(entries) || entries.length === 0) {
+        upcomingEntries.value = []
+        return
+    }
+
+    const today = new Date()
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+
+    const sorted = entries
+        .map((entry) => ({
+            entry,
+            date: entry.po_date ? new Date(entry.po_date) : null,
+        }))
+        .filter(({ date }) => date instanceof Date && !Number.isNaN(date.getTime()) && date >= startOfToday)
+        .sort((a, b) => {
+            if (!a.date || !b.date) return 0
+            return a.date.getTime() - b.date.getTime()
+        })
+        .slice(0, MAX_UPCOMING_ITEMS)
+        .map(({ entry }) => entry)
+
+    upcomingEntries.value = sorted
+}
+
+const formatThaiDate = (dateString?: string | null) => {
+    if (!dateString) return '-'
+    const parsed = new Date(dateString)
+    if (Number.isNaN(parsed.getTime())) return '-'
+    return thaiDateFormatter.format(parsed)
 }
 
 watch(
