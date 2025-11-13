@@ -34,7 +34,7 @@
 
             <ClientOnly>
                 <div class="relative rounded-md  p-3">
-                    <DataTable class="" :value="filteredRows" :loading="isLoading" dataKey="id" lazy paginator
+                    <DataTable class="prime-po-table" :value="rows" :loading="isLoading" dataKey="id" lazy paginator
                         :first="firstRow" :rows="perPage" :rowsPerPageOptions="pageSizeOptions"
                         :totalRecords="totalRows" :rowHover="true" showGridlines scrollable scrollHeight=""
                         @page="handlePageChange">
@@ -82,7 +82,7 @@ import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import VSelect from 'vue-select'
 import 'vue-select/dist/vue-select.css'
 
@@ -102,23 +102,32 @@ const perPage = ref(10)
 const totalRows = ref(0)
 const isLoading = ref(false)
 const pageSizeOptions = [10, 20, 50]
+const wait = (ms = 600) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const teamOptions = computed(() => [
     ...new Set(rows.value.map((row) => row.division).filter(Boolean)),
 ])
 const firstRow = computed(() => (currentPage.value - 1) * perPage.value)
+const apiFilters = computed(() => ({
+    division: team.value || undefined,
+    arrivalDate: deliveryDate.value || undefined,
+    itemDesc: item.value.trim() || undefined,
+}))
 
 const fetchPlPoPl = async (page = currentPage.value, pageSize = perPage.value) => {
     isLoading.value = true
     try {
+        const filters = apiFilters.value
+
         const [response] = await Promise.all([
             apiPublic.get('/z_po_pl_po', {
                 params: {
                     page,
                     perPage: pageSize,
+                    ...filters,
                 },
             }),
-
+            wait(),
         ])
 
         const { data: payload = [], pagination } = response
@@ -142,6 +151,27 @@ const fetchPlPoPl = async (page = currentPage.value, pageSize = perPage.value) =
         isLoading.value = false
     }
 }
+
+const triggerFilterFetch = () => {
+    currentPage.value = 1
+    fetchPlPoPl(1, perPage.value)
+}
+
+watch([deliveryDate, team], () => {
+    triggerFilterFetch()
+})
+
+let searchDebounce
+watch(item, () => {
+    if (searchDebounce) clearTimeout(searchDebounce)
+    searchDebounce = setTimeout(() => {
+        triggerFilterFetch()
+    }, 400)
+})
+
+onBeforeUnmount(() => {
+    if (searchDebounce) clearTimeout(searchDebounce)
+})
 
 const handlePageChange = (event) => {
     const nextPage = (event?.page ?? 0) + 1
@@ -167,70 +197,4 @@ const getStatusClass = (status) => {
 }
 
 fetchPlPoPl()
-
-const filteredRows = computed(() => {
-    const dateFilter = deliveryDate.value
-    const teamFilter = team.value
-    const itemFilter = item.value.trim().toLowerCase()
-
-    return rows.value.filter((row) => {
-        const matchDate = dateFilter ? row.arrival_date === dateFilter : true
-        const matchTeam = teamFilter ? row.division === teamFilter : true
-        const matchItem = itemFilter
-            ? `${row.po_no} ${row.vendor_name} ${row.item_no} ${row.item_desc}`.toLowerCase().includes(itemFilter)
-            : true
-
-        return matchDate && matchTeam && matchItem
-    })
-})
 </script>
-
-<style lang="scss" scoped>
-:deep(.prime-po-table.p-datatable) {
-    border-radius: 1.25rem;
-    border: 1px solid #e2e8f0;
-    overflow: hidden;
-    font-size: 0.9rem;
-}
-
-:deep(.prime-po-table .p-datatable-thead > tr > th) {
-    background: linear-gradient(180deg, #f8fafc 0%, #e2e8ff 100%);
-    color: #0f172a;
-    font-weight: 600;
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    border-color: #e2e8f0;
-}
-
-:deep(.prime-po-table .p-datatable-tbody > tr > td) {
-    border-color: #f1f5f9;
-    color: #0f172a;
-}
-
-:deep(.prime-po-table .p-datatable-tbody > tr:nth-child(even)) {
-    background-color: #f9fafb;
-}
-
-:deep(.prime-po-table .p-datatable-tbody > tr:hover) {
-    background-color: #eef2ff;
-}
-
-:deep(.prime-po-table .p-paginator) {
-    padding: 1rem;
-}
-
-:deep(.prime-po-table .p-paginator .p-paginator-page.p-highlight) {
-    background: #4338ca;
-    border-color: #4338ca;
-    color: #fff;
-}
-
-:deep(.prime-po-table .p-paginator .p-paginator-page) {
-    border-radius: 999px;
-}
-
-:deep(.prime-po-table .p-dropdown) {
-    border-radius: 999px;
-}
-</style>
