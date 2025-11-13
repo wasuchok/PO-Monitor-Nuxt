@@ -2,8 +2,7 @@
     <section class="space-y-6">
         <div class="grid gap-6 lg:grid-cols-4">
             <ClientOnly>
-                <div
-                    class="relative rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 lg:col-span-3 lg:p-6 is-light-mode">
+                <div class="relative rounded-md bg-white p-1 shadow-sm  lg:col-span-3 lg:p-2 is-light-mode">
                     <Qalendar class="min-h-[80vh]" :events="poEvents" :config="calendarConfig"
                         :selected-date="selectedDate" :is-loading="false" />
                 </div>
