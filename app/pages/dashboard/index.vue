@@ -18,7 +18,8 @@
                 <div class="space-y-2">
                     <p class="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-500">Team</p>
                     <ClientOnly>
-                        <VSelect v-model="team" :options="teamOptions" placeholder="เลือกทีม" :clearable="true" />
+                        <VSelect v-model="team" :options="teamOptions" :reduce="(option) => option.value"
+                            placeholder="เลือกทีม" :clearable="true" />
                         <template #fallback>
                             <div class="h-10 animate-pulse rounded-lg bg-neutral-100"></div>
                         </template>
@@ -97,16 +98,23 @@ const deliveryDate = ref(null)
 const team = ref(null)
 const item = ref('')
 const rows = ref([])
+const divisionOptions = ref([])
 const currentPage = ref(1)
 const perPage = ref(10)
 const totalRows = ref(0)
 const isLoading = ref(false)
 const pageSizeOptions = [10, 20, 50]
 const wait = (ms = 600) => new Promise((resolve) => setTimeout(resolve, ms))
+let searchDebounce
 
-const teamOptions = computed(() => [
-    ...new Set(rows.value.map((row) => row.division).filter(Boolean)),
-])
+const teamOptions = computed(() => {
+    const items = divisionOptions.value
+    const formatted = items.map(({ division, totalOrders }) => ({
+        label: `${division || '-'}`,
+        value: division,
+    }))
+    return formatted
+})
 const firstRow = computed(() => (currentPage.value - 1) * perPage.value)
 const apiFilters = computed(() => ({
     division: team.value || undefined,
@@ -135,7 +143,7 @@ const fetchPlPoPl = async (page = currentPage.value, pageSize = perPage.value) =
         rows.value = Array.isArray(payload)
             ? payload.map((entry, index) => ({
                 ...entry,
-                id: `${entry.po_no ?? 'PO'}-${entry.row_no ?? index}`,
+                id: `${entry.po_no ?? 'PO'} - ${entry.row_no ?? index}`,
                 status_label: STATUS_LOOKUP[entry.status] ?? String(entry.status ?? '-'),
             }))
             : []
@@ -152,6 +160,16 @@ const fetchPlPoPl = async (page = currentPage.value, pageSize = perPage.value) =
     }
 }
 
+const fetchDivisions = async () => {
+    try {
+        const { data = [] } = await apiPublic.get('/z_po_pl_po/divisions')
+        divisionOptions.value = Array.isArray(data) ? data : []
+    } catch (error) {
+        console.log(error)
+        divisionOptions.value = []
+    }
+}
+
 const triggerFilterFetch = () => {
     currentPage.value = 1
     fetchPlPoPl(1, perPage.value)
@@ -161,7 +179,7 @@ watch([deliveryDate, team], () => {
     triggerFilterFetch()
 })
 
-let searchDebounce
+
 watch(item, () => {
     if (searchDebounce) clearTimeout(searchDebounce)
     searchDebounce = setTimeout(() => {
@@ -197,4 +215,5 @@ const getStatusClass = (status) => {
 }
 
 fetchPlPoPl()
+fetchDivisions()
 </script>
