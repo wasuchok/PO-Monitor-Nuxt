@@ -40,18 +40,18 @@
                         paginator :first="firstRow" :rows="perPage" :rowsPerPageOptions="pageSizeOptions"
                         :totalRecords="totalRows" :rowHover="true" :tableStyle="{ fontSize: '0.8rem' }" showGridlines
                         scrollable scrollHeight="" @page="handlePageChange">
-                        <Column field="po_no" header="PO No" sortable style="min-width: 8rem" />
-                        <Column field="vendor_name" header="Vendor" sortable style="min-width: 10rem" />
-                        <Column field="po_date" header="PO Date" sortable style="min-width: 6.5rem" />
-                        <Column field="arrival_date" header="Arr Date" sortable style="min-width: 6.5rem" />
-                        <Column field="pr_number" header="PR Number" sortable style="min-width: 7rem" />
+                        <Column field="po_no" header="PO No" style="min-width: 8rem" />
+                        <Column field="vendor_name" header="Vendor" style="min-width: 10rem" />
+                        <Column field="po_date" header="PO Date" style="min-width: 6.5rem" />
+                        <Column field="arrival_date" header="Arr Date" style="min-width: 6.5rem" />
+                        <Column field="pr_number" header="PR Number" style="min-width: 7rem" />
                         <Column field="reference" header="Reference" style="min-width: 6rem" />
                         <Column field="row_no" header="Row No" style="min-width: 5rem" />
                         <Column field="item_no" header="Item No" style="min-width: 9rem" />
                         <Column field="item_desc" header="Item Description" style="min-width: 10rem" />
                         <Column field="model" header="Model" style="min-width: 6.5rem" />
                         <Column field="brand" header="Brand" style="min-width: 6rem" />
-                        <Column field="oq_ordered" header="Qty" sortable style="min-width: 5rem" />
+                        <Column field="oq_ordered" header="Qty" style="min-width: 5rem" />
                         <Column field="order_unit" header="Unit" style="min-width: 5rem" />
                         <Column field="division" header="Division" style="min-width: 6rem" />
                         <Column field="user_create" header="User Create" style="min-width: 7rem" />
