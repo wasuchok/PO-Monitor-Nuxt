@@ -33,25 +33,43 @@
             </div>
 
             <ClientOnly>
-                <div class="relative">
-                    <Vue3Datatable class="mt-3" :rows="filteredRows" :columns="columns" :search="search"
-                        :page="currentPage" :pageSize="perPage" :pageSizeOptions="[10, 20, 50]" :totalRows="totalRows"
-                        :isServerMode="true" :loading="isLoading" skin="bh-table-bordered"
-                        @change="handleTableChange" />
-
-                    <div v-if="isLoading"
-                        class="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm">
-                        <div class="flex items-center space-x-2 text-sm font-medium text-neutral-600">
-                            <span class="h-3 w-3 animate-ping rounded-full bg-primary-500"></span>
-                            <span>Loading Data...</span>
-                        </div>
-                    </div>
+                <div class="relative rounded-md  p-3">
+                    <DataTable class="" :value="filteredRows" :loading="isLoading" dataKey="id" lazy paginator
+                        :first="firstRow" :rows="perPage" :rowsPerPageOptions="pageSizeOptions"
+                        :totalRecords="totalRows" :rowHover="true" showGridlines scrollable scrollHeight=""
+                        @page="handlePageChange">
+                        <Column field="po_no" header="PO No" sortable style="min-width: 9rem" />
+                        <Column field="vendor_name" header="Vendor" sortable style="min-width: 14rem" />
+                        <Column field="po_date" header="PO Date" sortable style="min-width: 8rem" />
+                        <Column field="arrival_date" header="Arr Date" sortable style="min-width: 8rem" />
+                        <Column field="pr_number" header="PR Number" sortable style="min-width: 9rem" />
+                        <Column field="reference" header="Reference" style="min-width: 8rem" />
+                        <Column field="row_no" header="Row No" style="min-width: 6rem" />
+                        <Column field="item_no" header="Item No" style="min-width: 11rem" />
+                        <Column field="item_desc" header="Item Description" style="min-width: 14rem" />
+                        <Column field="model" header="Model" style="min-width: 8rem" />
+                        <Column field="brand" header="Brand" style="min-width: 7rem" />
+                        <Column field="oq_ordered" header="Qty" sortable style="min-width: 6rem" />
+                        <Column field="order_unit" header="Unit" style="min-width: 6rem" />
+                        <Column field="division" header="Division" style="min-width: 7rem" />
+                        <Column field="user_create" header="User Create" style="min-width: 9rem" />
+                        <Column header="Status" style="min-width: 8rem">
+                            <template #body="{ data }">
+                                <span :class="getStatusClass(data.status_label)">
+                                    {{ data.status_label }}
+                                </span>
+                            </template>
+                        </Column>
+                    </DataTable>
                 </div>
 
                 <template #fallback>
                     <div
-                        class="mt-6 flex items-center justify-center rounded-xl border border-dashed border-neutral-200 p-8 text-sm text-neutral-500">
-                        Loading Table...
+                        class="mt-6 flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-neutral-200 bg-neutral-50/80 p-8 text-neutral-500">
+                        <span
+                            class="h-8 w-8 animate-pulse rounded-full border border-neutral-300 bg-neutral-200/80"></span>
+                        <p class="text-sm font-medium">Loading table...</p>
+                        <p class="text-xs text-neutral-400">ข้อมูลจะปรากฏโดยอัตโนมัติ</p>
                     </div>
                 </template>
             </ClientOnly>
@@ -60,96 +78,13 @@
 </template>
 
 <script setup>
-import Vue3Datatable from '@bhplugin/vue3-datatable'
-import '@bhplugin/vue3-datatable/dist/style.css'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
+import Column from 'primevue/column'
+import DataTable from 'primevue/datatable'
 import { computed, ref } from 'vue'
 import VSelect from 'vue-select'
 import 'vue-select/dist/vue-select.css'
-
-const columns = ref([
-    {
-        field: 'po_no',
-        title: 'PO_No',
-    },
-    {
-        field: 'vendor_name',
-        title: 'Vendor',
-
-    },
-    {
-        field: 'po_date',
-        title: 'PO_DATE',
-
-    },
-    {
-        field: 'arrival_date',
-        title: 'ArrDate',
-
-    },
-    {
-        field: 'pr_number',
-        title: 'PR_Number',
-
-    },
-    {
-        field: 'reference',
-        title: 'Reference',
-
-    },
-    {
-        field: 'row_no',
-        title: 'ROWNO',
-
-    },
-    {
-        field: 'item_no',
-        title: 'ITEMNO',
-
-    },
-    {
-        field: 'item_desc',
-        title: 'Item Description',
-
-    },
-    {
-        field: 'model',
-        title: 'Model',
-
-    },
-    {
-        field: 'brand',
-        title: 'Brand',
-
-    },
-    {
-        field: 'oq_ordered',
-        title: 'OQORDERED',
-        type: 'number',
-
-    },
-    {
-        field: 'order_unit',
-        title: 'ORDERUNIT',
-
-    },
-    {
-        field: 'status_label',
-        title: 'Status',
-
-    },
-    {
-        field: 'division',
-        title: 'Division',
-
-    },
-    {
-        field: 'user_create',
-        title: 'User_Create',
-
-    },
-])
 
 const STATUS_LOOKUP = {
     1: 'Draft',
@@ -158,7 +93,6 @@ const STATUS_LOOKUP = {
 }
 
 const { apiPublic } = useApi()
-const search = ref('')
 const deliveryDate = ref(null)
 const team = ref(null)
 const item = ref('')
@@ -167,10 +101,12 @@ const currentPage = ref(1)
 const perPage = ref(10)
 const totalRows = ref(0)
 const isLoading = ref(false)
-const wait = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms))
+const pageSizeOptions = [10, 20, 50]
+
 const teamOptions = computed(() => [
     ...new Set(rows.value.map((row) => row.division).filter(Boolean)),
 ])
+const firstRow = computed(() => (currentPage.value - 1) * perPage.value)
 
 const fetchPlPoPl = async (page = currentPage.value, pageSize = perPage.value) => {
     isLoading.value = true
@@ -182,7 +118,7 @@ const fetchPlPoPl = async (page = currentPage.value, pageSize = perPage.value) =
                     perPage: pageSize,
                 },
             }),
-            wait(1000),
+
         ])
 
         const { data: payload = [], pagination } = response
@@ -199,7 +135,6 @@ const fetchPlPoPl = async (page = currentPage.value, pageSize = perPage.value) =
             currentPage.value = pagination.currentPage ?? page
             perPage.value = pagination.perPage ?? pageSize
             totalRows.value = pagination.total ?? totalRows.value
-            console.log(pagination)
         }
     } catch (error) {
         console.log(error)
@@ -208,11 +143,27 @@ const fetchPlPoPl = async (page = currentPage.value, pageSize = perPage.value) =
     }
 }
 
-const handleTableChange = (change) => {
-    const nextPage = change?.current_page ?? 1
-    const nextPageSize = change?.pagesize ?? perPage.value
+const handlePageChange = (event) => {
+    const nextPage = (event?.page ?? 0) + 1
+    const nextPageSize = event?.rows ?? perPage.value
+
+    currentPage.value = nextPage
+    perPage.value = nextPageSize
 
     fetchPlPoPl(nextPage, nextPageSize)
+}
+
+const getStatusClass = (status) => {
+    switch (status) {
+        case 'Completed':
+            return 'inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700'
+        case 'Partial':
+            return 'inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700'
+        case 'Draft':
+            return 'inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-600'
+        default:
+            return 'inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600'
+    }
 }
 
 fetchPlPoPl()
@@ -234,4 +185,52 @@ const filteredRows = computed(() => {
 })
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+:deep(.prime-po-table.p-datatable) {
+    border-radius: 1.25rem;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    font-size: 0.9rem;
+}
+
+:deep(.prime-po-table .p-datatable-thead > tr > th) {
+    background: linear-gradient(180deg, #f8fafc 0%, #e2e8ff 100%);
+    color: #0f172a;
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-color: #e2e8f0;
+}
+
+:deep(.prime-po-table .p-datatable-tbody > tr > td) {
+    border-color: #f1f5f9;
+    color: #0f172a;
+}
+
+:deep(.prime-po-table .p-datatable-tbody > tr:nth-child(even)) {
+    background-color: #f9fafb;
+}
+
+:deep(.prime-po-table .p-datatable-tbody > tr:hover) {
+    background-color: #eef2ff;
+}
+
+:deep(.prime-po-table .p-paginator) {
+    padding: 1rem;
+}
+
+:deep(.prime-po-table .p-paginator .p-paginator-page.p-highlight) {
+    background: #4338ca;
+    border-color: #4338ca;
+    color: #fff;
+}
+
+:deep(.prime-po-table .p-paginator .p-paginator-page) {
+    border-radius: 999px;
+}
+
+:deep(.prime-po-table .p-dropdown) {
+    border-radius: 999px;
+}
+</style>
