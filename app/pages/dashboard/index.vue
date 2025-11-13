@@ -8,7 +8,8 @@
                     <p class="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-500">Delivery Date</p>
                     <ClientOnly>
                         <VueDatePicker v-model="deliveryDate" model-type="yyyy-MM-dd" :enable-time-picker="false"
-                            auto-apply :clearable="true" placeholder="เลือกวันที่ส่งของ" :teleport="true" />
+                            auto-apply :clearable="true" placeholder="Select delivery date" :teleport="true"
+                            input-class="dp-input-sm" />
                         <template #fallback>
                             <div class="h-10 animate-pulse rounded-lg bg-neutral-100"></div>
                         </template>
@@ -18,8 +19,8 @@
                 <div class="space-y-2">
                     <p class="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-500">Team</p>
                     <ClientOnly>
-                        <VSelect v-model="team" :options="teamOptions" :reduce="(option) => option.value"
-                            placeholder="เลือกทีม" :clearable="true" />
+                        <VSelect v-model="team" class="vs-select-sm" :options="teamOptions"
+                            :reduce="(option) => option.value" placeholder="Select team" :clearable="true" />
                         <template #fallback>
                             <div class="h-10 animate-pulse rounded-lg bg-neutral-100"></div>
                         </template>
@@ -28,8 +29,8 @@
 
                 <div class="space-y-2">
                     <p class="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-500">Item</p>
-                    <input v-model="item" type="text" placeholder="กรอกชื่อสินค้า/PO"
-                        class="h-10 w-full rounded-lg border border-neutral-200 px-4 text-sm text-neutral-700 outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100" />
+                    <input v-model="item" type="text" placeholder="Enter product or PO"
+                        class="h-9 w-full rounded-lg border border-neutral-200 px-3 text-xs text-neutral-700 outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100" />
                 </div>
             </div>
 
@@ -64,7 +65,7 @@
                         <template #empty>
                             <div class="flex flex-col items-center justify-center gap-2 py-16 text-neutral-500">
                                 <span class="text-base font-semibold">No Data</span>
-                                <p class="text-xs text-neutral-400">ลองปรับตัวกรองหรือโหลดข้อมูลอีกครั้ง</p>
+                                <p class="text-xs text-neutral-400">Try adjusting filters or reload the data.</p>
                             </div>
                         </template>
                     </DataTable>
@@ -76,7 +77,7 @@
                         <span
                             class="h-8 w-8 animate-pulse rounded-full border border-neutral-300 bg-neutral-200/80"></span>
                         <p class="text-sm font-medium">Loading table...</p>
-                        <p class="text-xs text-neutral-400">ข้อมูลจะปรากฏโดยอัตโนมัติ</p>
+                        <p class="text-xs text-neutral-400">Data will appear automatically.</p>
                     </div>
                 </template>
             </ClientOnly>
@@ -223,3 +224,24 @@ const getStatusClass = (status) => {
 fetchPlPoPl()
 fetchDivisions()
 </script>
+
+<style scoped>
+:deep(.dp-input-sm) {
+    height: 2.25rem;
+    font-size: 0.85rem;
+    padding: 0 0.75rem;
+    border-radius: 0.65rem;
+}
+
+:deep(.vs-select-sm .vs__dropdown-toggle) {
+    min-height: 2.25rem;
+    border-radius: 0.65rem;
+    padding: 0 0.65rem;
+}
+
+:deep(.vs-select-sm .vs__selected),
+:deep(.vs-select-sm .vs__search),
+:deep(.vs-select-sm .vs__placeholder) {
+    font-size: 0.85rem;
+}
+</style>
