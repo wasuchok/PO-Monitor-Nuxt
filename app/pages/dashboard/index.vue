@@ -35,26 +35,26 @@
 
             <ClientOnly>
                 <div class="relative rounded-md  p-3">
-                    <DataTable class="prime-po-table" :value="rows" :loading="isLoading" dataKey="id" lazy paginator
-                        :first="firstRow" :rows="perPage" :rowsPerPageOptions="pageSizeOptions"
-                        :totalRecords="totalRows" :rowHover="true" showGridlines scrollable scrollHeight=""
-                        @page="handlePageChange">
-                        <Column field="po_no" header="PO No" sortable style="min-width: 9rem" />
-                        <Column field="vendor_name" header="Vendor" sortable style="min-width: 14rem" />
-                        <Column field="po_date" header="PO Date" sortable style="min-width: 8rem" />
-                        <Column field="arrival_date" header="Arr Date" sortable style="min-width: 8rem" />
-                        <Column field="pr_number" header="PR Number" sortable style="min-width: 9rem" />
-                        <Column field="reference" header="Reference" style="min-width: 8rem" />
-                        <Column field="row_no" header="Row No" style="min-width: 6rem" />
-                        <Column field="item_no" header="Item No" style="min-width: 11rem" />
-                        <Column field="item_desc" header="Item Description" style="min-width: 14rem" />
-                        <Column field="model" header="Model" style="min-width: 8rem" />
-                        <Column field="brand" header="Brand" style="min-width: 7rem" />
-                        <Column field="oq_ordered" header="Qty" sortable style="min-width: 6rem" />
-                        <Column field="order_unit" header="Unit" style="min-width: 6rem" />
-                        <Column field="division" header="Division" style="min-width: 7rem" />
-                        <Column field="user_create" header="User Create" style="min-width: 9rem" />
-                        <Column header="Status" style="min-width: 8rem">
+                    <DataTable class="prime-po-table text-[11px]" :value="rows" :loading="isLoading" dataKey="id" lazy
+                        paginator :first="firstRow" :rows="perPage" :rowsPerPageOptions="pageSizeOptions"
+                        :totalRecords="totalRows" :rowHover="true" :tableStyle="{ fontSize: '0.8rem' }" showGridlines
+                        scrollable scrollHeight="" @page="handlePageChange">
+                        <Column field="po_no" header="PO No" sortable style="min-width: 8rem" />
+                        <Column field="vendor_name" header="Vendor" sortable style="min-width: 10rem" />
+                        <Column field="po_date" header="PO Date" sortable style="min-width: 6.5rem" />
+                        <Column field="arrival_date" header="Arr Date" sortable style="min-width: 6.5rem" />
+                        <Column field="pr_number" header="PR Number" sortable style="min-width: 7rem" />
+                        <Column field="reference" header="Reference" style="min-width: 6rem" />
+                        <Column field="row_no" header="Row No" style="min-width: 5rem" />
+                        <Column field="item_no" header="Item No" style="min-width: 9rem" />
+                        <Column field="item_desc" header="Item Description" style="min-width: 10rem" />
+                        <Column field="model" header="Model" style="min-width: 6.5rem" />
+                        <Column field="brand" header="Brand" style="min-width: 6rem" />
+                        <Column field="oq_ordered" header="Qty" sortable style="min-width: 5rem" />
+                        <Column field="order_unit" header="Unit" style="min-width: 5rem" />
+                        <Column field="division" header="Division" style="min-width: 6rem" />
+                        <Column field="user_create" header="User Create" style="min-width: 7rem" />
+                        <Column header="Status" style="min-width: 6rem">
                             <template #body="{ data }">
                                 <span :class="getStatusClass(data.status_label)">
                                     {{ data.status_label }}
@@ -63,8 +63,8 @@
                         </Column>
                         <template #empty>
                             <div class="flex flex-col items-center justify-center gap-2 py-16 text-neutral-500">
-                                <span class="text-lg font-semibold">No Data</span>
-                                <p class="text-sm text-neutral-400">ลองปรับตัวกรองหรือโหลดข้อมูลอีกครั้ง</p>
+                                <span class="text-base font-semibold">No Data</span>
+                                <p class="text-xs text-neutral-400">ลองปรับตัวกรองหรือโหลดข้อมูลอีกครั้ง</p>
                             </div>
                         </template>
                     </DataTable>
