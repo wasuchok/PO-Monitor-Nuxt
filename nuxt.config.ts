@@ -1,7 +1,11 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: ['@nuxtjs/tailwindcss', 'nuxt-icon', '@nuxt/icon'],
-  css: ['@/assets/css/tailwind.css', 'primeicons/primeicons.css'],
+  css: [
+    '@/assets/css/tailwind.css',
+    'primeicons/primeicons.css',
+    'qalendar/dist/style.css',
+  ],
   runtimeConfig: {
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api/v1',
