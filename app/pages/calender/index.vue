@@ -4,7 +4,8 @@
             <ClientOnly>
                 <div class="relative rounded-md bg-white p-1 shadow-sm  lg:col-span-3 lg:p-2 is-light-mode">
                     <Qalendar class="min-h-[80vh]" :events="poEvents" :config="calendarConfig"
-                        :selected-date="selectedDate" :is-loading="false" />
+                        :selected-date="selectedDate" :is-loading="isCalendarLoading"
+                        @updated-period="handlePeriodChange" />
                 </div>
             </ClientOnly>
 
@@ -26,58 +27,128 @@
 
 <script setup lang="ts">
 import { Qalendar } from 'qalendar'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
-interface Event {
+interface CalendarEvent {
     id: number | string
     title: string
-    time: { start: string; end?: string }
+    time: { start: string; end: string }
+    description?: string
+    color?: 'blue' | 'yellow' | 'green' | 'red' | 'purple'
 }
 
-const selectedDate = ref(new Date())
+type CalendarEntry = {
+    po_no: string
+    po_date: string
+    division?: string | null
+    status?: number | null
+}
 
-const poEvents = ref<Event[]>([
-    {
-        id: 1,
-        title: 'PO-001: สั่งซื้อวัสดุสำนักงาน',
-        time: { start: '2025-11-14 10:00', end: '2025-11-14 12:00' }
-    },
-    {
-        id: 2,
-        title: 'PO-002: สั่งซื้อเครื่องจักร',
-        time: { start: '2025-11-15 14:00', end: '2025-11-15 16:00' }
-    },
-    {
-        id: 3,
-        title: 'PO-003: สั่งซื้อสินค้าคงคลัง',
-        time: { start: '2025-11-17 09:00', end: '2025-11-17 11:00' }
-    },
-    {
-        id: 4,
-        title: 'PO-004: สั่งซื้ออุปกรณ์ IT',
-        time: { start: '2025-11-20 15:00', end: '2025-11-20 17:00' }
-    },
-    {
-        id: 5,
-        title: 'PO-005: สั่งซื้อบริการซ่อมบำรุง',
-        time: { start: '2025-11-22 13:00', end: '2025-11-22 15:00' }
-    },
-    {
-        id: 6,
-        title: 'PO-006: สั่งซื้อวัตถุดิบ',
-        time: { start: '2025-11-25 11:00', end: '2025-11-25 13:00' }
-    },
-    {
-        id: 7,
-        title: 'PO-007: สั่งซื้อเฟอร์นิเจอร์',
-        time: { start: '2025-12-01 10:00', end: '2025-12-01 12:00' }
-    },
-    {
-        id: 8,
-        title: 'PO-008: สั่งซื้อซอฟต์แวร์',
-        time: { start: '2025-12-05 14:00', end: '2025-12-05 16:00' }
+type CalendarApiResponse = {
+    data?: CalendarEntry[]
+}
+
+type QalendarPeriodPayload = {
+    start?: Date
+    end?: Date
+    selectedDate: Date
+}
+
+const STATUS_LABEL_LOOKUP: Record<number, string> = {
+    1: 'Draft',
+    2: 'Partial',
+    3: 'Completed',
+}
+
+const STATUS_COLOR_LOOKUP: Record<number, CalendarEvent['color']> = {
+    1: 'yellow',
+    2: 'blue',
+    3: 'green',
+}
+
+const { apiPublic } = useApi()
+const selectedDate = ref(new Date())
+const isCalendarLoading = ref(false)
+
+const poEvents = ref<CalendarEvent[]>([])
+
+const getStatusLabel = (status?: number | null) =>
+    STATUS_LABEL_LOOKUP[status ?? 0] ?? 'Unknown'
+
+const resolveEventColor = (status?: number | null) =>
+    STATUS_COLOR_LOOKUP[status ?? 0] ?? 'purple'
+
+const normalizeEventDate = (dateString: string) => {
+    const safeDate = dateString || selectedDate.value.toISOString().slice(0, 10)
+    return {
+        start: safeDate,
+        end: safeDate,
     }
-])
+}
+
+const fetchCalendarEntries = async (date: Date = selectedDate.value) => {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return
+
+    const month = date.getMonth() + 1
+    const year = date.getFullYear()
+
+    isCalendarLoading.value = true
+    try {
+        const response = await apiPublic.get<CalendarApiResponse>('/po/calendar', {
+            params: {
+                month,
+                year,
+                perPage: 0,
+            },
+        })
+
+        const entries = Array.isArray(response?.data) ? response.data : []
+        poEvents.value = entries
+            .filter((entry) => Boolean(entry.po_date))
+            .map((entry, index) => {
+                const time = normalizeEventDate(entry.po_date)
+                const statusLabel = getStatusLabel(entry.status)
+
+                return {
+                    id: entry.po_no ?? `po-${index}`,
+                    title: entry.po_no
+                        ? `${entry.po_no}${entry.division ? ` (${entry.division})` : ''}`
+                        : `PO ${index + 1}`,
+                    time,
+                    description: [statusLabel, entry.division ? `Division: ${entry.division}` : null]
+                        .filter(Boolean)
+                        .join(' | '),
+                    color: resolveEventColor(entry.status),
+                }
+            })
+    } catch (error) {
+        console.error('Unable to load PO calendar', error)
+        poEvents.value = []
+    } finally {
+        isCalendarLoading.value = false
+    }
+}
+
+watch(
+    selectedDate,
+    (next, previous) => {
+        if (!next) return
+        if (
+            previous &&
+            previous.getMonth() === next.getMonth() &&
+            previous.getFullYear() === next.getFullYear()
+        ) {
+            return
+        }
+        fetchCalendarEntries(next)
+    },
+    { immediate: true },
+)
+
+const handlePeriodChange = (period: QalendarPeriodPayload) => {
+    if (!period?.selectedDate) return
+    selectedDate.value = new Date(period.selectedDate)
+}
 
 const calendarConfig: any = {
     locale: 'th-TH',
