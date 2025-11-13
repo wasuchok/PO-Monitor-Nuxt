@@ -6,6 +6,10 @@
                     <Qalendar class="min-h-[80vh]" :events="poEvents" :config="calendarConfig"
                         :selected-date="selectedDate" :is-loading="isCalendarLoading"
                         @updated-period="handlePeriodChange" />
+                    <div v-if="isCalendarLoading"
+                        class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-md bg-white/80">
+                        <span class="text-sm font-semibold text-neutral-500">กำลังโหลดข้อมูล...</span>
+                    </div>
                 </div>
             </ClientOnly>
 
@@ -146,8 +150,9 @@ watch(
 )
 
 const handlePeriodChange = (period: QalendarPeriodPayload) => {
-    if (!period?.selectedDate) return
-    selectedDate.value = new Date(period.selectedDate)
+    const nextDate = period?.start ?? period?.selectedDate
+    if (!nextDate) return
+    selectedDate.value = new Date(nextDate)
 }
 
 const calendarConfig: any = {
