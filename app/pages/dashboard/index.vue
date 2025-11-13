@@ -33,13 +33,25 @@
             </div>
 
             <ClientOnly>
-                <Vue3Datatable class="mt-6" :rows="filteredRows" :columns="columns" :search="search" :pageSize="5"
-                    :pageSizeOptions="[5, 10, 20]" skin="bh-table-bordered" />
+                <div class="relative">
+                    <Vue3Datatable class="mt-3" :rows="filteredRows" :columns="columns" :search="search"
+                        :page="currentPage" :pageSize="perPage" :pageSizeOptions="[10, 20, 50]" :totalRows="totalRows"
+                        :isServerMode="true" :loading="isLoading" skin="bh-table-bordered"
+                        @change="handleTableChange" />
+
+                    <div v-if="isLoading"
+                        class="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm">
+                        <div class="flex items-center space-x-2 text-sm font-medium text-neutral-600">
+                            <span class="h-3 w-3 animate-ping rounded-full bg-primary-500"></span>
+                            <span>Loading Data...</span>
+                        </div>
+                    </div>
+                </div>
 
                 <template #fallback>
                     <div
                         class="mt-6 flex items-center justify-center rounded-xl border border-dashed border-neutral-200 p-8 text-sm text-neutral-500">
-                        กำลังโหลดตาราง...
+                        Loading Table...
                     </div>
                 </template>
             </ClientOnly>
@@ -58,152 +70,152 @@ import 'vue-select/dist/vue-select.css'
 
 const columns = ref([
     {
-        field: 'poNumber',
+        field: 'po_no',
         title: 'PO_No',
-        width: '110px',
-        sort: true,
     },
     {
-        field: 'POROW',
+        field: 'vendor_name',
         title: 'Vendor',
+
     },
     {
-        field: 'department',
+        field: 'po_date',
         title: 'PO_DATE',
-        width: '160px',
+
     },
     {
-        field: 'amount',
+        field: 'arrival_date',
         title: 'ArrDate',
-        type: 'number',
-        cellClass: 'text-right',
-        width: '140px',
+
     },
     {
-        field: 'dueDate',
+        field: 'pr_number',
         title: 'PR_Number',
-        type: 'date',
-        width: '140px',
+
     },
     {
-        field: 'status',
-        title: 'Vendor',
-        width: '140px',
-    },
-    {
-        field: 'status',
+        field: 'reference',
         title: 'Reference',
-        width: '140px',
+
     },
     {
-        field: 'status',
+        field: 'row_no',
         title: 'ROWNO',
-        width: '140px',
+
     },
     {
-        field: 'status',
+        field: 'item_no',
         title: 'ITEMNO',
-        width: '140px',
+
     },
     {
-        field: 'status',
+        field: 'item_desc',
+        title: 'Item Description',
+
+    },
+    {
+        field: 'model',
         title: 'Model',
-        width: '140px',
+
     },
     {
-        field: 'status',
+        field: 'brand',
         title: 'Brand',
-        width: '140px',
+
     },
     {
-        field: 'status',
+        field: 'oq_ordered',
         title: 'OQORDERED',
-        width: '140px',
+        type: 'number',
+
     },
     {
-        field: 'status',
+        field: 'order_unit',
         title: 'ORDERUNIT',
-        width: '140px',
+
     },
     {
-        field: 'status',
+        field: 'status_label',
         title: 'Status',
-        width: '140px',
+
     },
     {
-        field: 'status',
+        field: 'division',
         title: 'Division',
-        width: '140px',
+
     },
     {
-        field: 'status',
+        field: 'user_create',
         title: 'User_Create',
-        width: '140px',
+
     },
 ])
 
-const rows = ref([
-    {
-        id: 1,
-        poNumber: 'PO-24015',
-        vendor: 'Siam IT Supplies',
-        department: 'Procurement',
-        amount: 82000,
-        dueDate: '2025-11-30',
-        status: 'Pending',
-    },
-    {
-        id: 2,
-        poNumber: 'PO-24009',
-        vendor: 'Bangkok Logistics',
-        department: 'Logistics',
-        amount: 45200,
-        dueDate: '2025-11-18',
-        status: 'Approved',
-    },
-    {
-        id: 3,
-        poNumber: 'PO-23998',
-        vendor: 'Eastern Foods',
-        department: 'Operations',
-        amount: 138500,
-        dueDate: '2025-11-22',
-        status: 'Pending',
-    },
-    {
-        id: 4,
-        poNumber: 'PO-23975',
-        vendor: 'Metro Marketing',
-        department: 'Marketing',
-        amount: 28600,
-        dueDate: '2025-11-15',
-        status: 'Rejected',
-    },
-    {
-        id: 5,
-        poNumber: 'PO-23940',
-        vendor: 'Northwind Electric',
-        department: 'Facilities',
-        amount: 512000,
-        dueDate: '2025-12-05',
-        status: 'Approved',
-    },
-    {
-        id: 6,
-        poNumber: 'PO-23888',
-        vendor: 'Chiangmai Crafts',
-        department: 'Retail',
-        amount: 76500,
-        dueDate: '2025-11-27',
-        status: 'Pending',
-    },
-])
+const STATUS_LOOKUP = {
+    1: 'Draft',
+    2: 'Partial',
+    3: 'Completed',
+}
 
+const { apiPublic } = useApi()
 const search = ref('')
 const deliveryDate = ref(null)
 const team = ref(null)
 const item = ref('')
-const teamOptions = [...new Set(rows.value.map((row) => row.department))]
+const rows = ref([])
+const currentPage = ref(1)
+const perPage = ref(10)
+const totalRows = ref(0)
+const isLoading = ref(false)
+const wait = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms))
+const teamOptions = computed(() => [
+    ...new Set(rows.value.map((row) => row.division).filter(Boolean)),
+])
+
+const fetchPlPoPl = async (page = currentPage.value, pageSize = perPage.value) => {
+    isLoading.value = true
+    try {
+        const [response] = await Promise.all([
+            apiPublic.get('/z_po_pl_po', {
+                params: {
+                    page,
+                    perPage: pageSize,
+                },
+            }),
+            wait(1000),
+        ])
+
+        const { data: payload = [], pagination } = response
+
+        rows.value = Array.isArray(payload)
+            ? payload.map((entry, index) => ({
+                ...entry,
+                id: `${entry.po_no ?? 'PO'}-${entry.row_no ?? index}`,
+                status_label: STATUS_LOOKUP[entry.status] ?? String(entry.status ?? '-'),
+            }))
+            : []
+
+        if (pagination) {
+            currentPage.value = pagination.currentPage ?? page
+            perPage.value = pagination.perPage ?? pageSize
+            totalRows.value = pagination.total ?? totalRows.value
+            console.log(pagination)
+        }
+    } catch (error) {
+        console.log(error)
+    } finally {
+        isLoading.value = false
+    }
+}
+
+const handleTableChange = (change) => {
+    const nextPage = change?.current_page ?? 1
+    const nextPageSize = change?.pagesize ?? perPage.value
+
+    fetchPlPoPl(nextPage, nextPageSize)
+}
+
+fetchPlPoPl()
 
 const filteredRows = computed(() => {
     const dateFilter = deliveryDate.value
@@ -211,10 +223,10 @@ const filteredRows = computed(() => {
     const itemFilter = item.value.trim().toLowerCase()
 
     return rows.value.filter((row) => {
-        const matchDate = dateFilter ? row.dueDate === dateFilter : true
-        const matchTeam = teamFilter ? row.department === teamFilter : true
+        const matchDate = dateFilter ? row.arrival_date === dateFilter : true
+        const matchTeam = teamFilter ? row.division === teamFilter : true
         const matchItem = itemFilter
-            ? `${row.poNumber} ${row.vendor} ${row.status}`.toLowerCase().includes(itemFilter)
+            ? `${row.po_no} ${row.vendor_name} ${row.item_no} ${row.item_desc}`.toLowerCase().includes(itemFilter)
             : true
 
         return matchDate && matchTeam && matchItem

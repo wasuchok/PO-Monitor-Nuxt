@@ -20,6 +20,20 @@ yarn install
 bun install
 ```
 
+## API Client
+
+The project exposes a reusable Axios helper via `useApi()`, which returns `apiPublic` and `apiPrivate` clients that share the same base URL and error handling. Configure the base URL with `NUXT_PUBLIC_API_BASE` (defaults to `http://localhost:3000/api`).
+
+```ts
+const { apiPublic, apiPrivate } = useApi()
+
+// Public call
+const poList = await apiPublic.get('/purchase-orders')
+
+// Private call (injects the `auth_token` cookie as Bearer automatically)
+await apiPrivate.post('/purchase-orders', payload)
+```
+
 ## Development Server
 
 Start the development server on `http://localhost:3000`:
