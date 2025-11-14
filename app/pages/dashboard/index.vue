@@ -111,7 +111,7 @@ const perPage = ref(10)
 const totalRows = ref(0)
 const isLoading = ref(false)
 const pageSizeOptions = [10, 20, 50]
-const wait = (ms = 600) => new Promise((resolve) => setTimeout(resolve, ms))
+const wait = (ms = 5) => new Promise((resolve) => setTimeout(resolve, ms))
 let searchDebounce
 
 const teamOptions = computed(() => {
