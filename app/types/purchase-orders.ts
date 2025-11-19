@@ -1,4 +1,4 @@
-export type CalendarEventColor = 'gray' | 'blue' | 'yellow' | 'green' | 'red' | 'purple'
+export type CalendarEventColor = 'gray' | 'blue' | 'yellow' | 'green' | 'red' | 'purple' | 'orange'
 
 export interface CalendarEvent {
     id: number | string

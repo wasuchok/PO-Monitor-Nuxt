@@ -20,7 +20,7 @@
                 </div>
             </ClientOnly>
 
-            <aside class="space-y-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+            <aside class="space-y-2 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-500">รายการถัดไป</p>
@@ -89,8 +89,8 @@ const STATUS_LABEL_LOOKUP: Record<number, string> = {
 }
 
 const STATUS_COLOR_LOOKUP: Record<number, CalendarEvent['color']> = {
-    1: 'gray',
-    2: 'blue',
+    1: 'blue',
+    2: 'yellow',
     3: 'green',
 }
 const STATUS_BADGE_LOOKUP: Record<number, string> = {
