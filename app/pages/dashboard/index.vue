@@ -1,7 +1,24 @@
 <template>
     <section class="space-y-6">
         <div class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-
+            <div class="flex flex-col gap-3 border-b border-neutral-100 pb-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <p class="text-xs uppercase tracking-[0.3em] text-neutral-400">Dashboard</p>
+                    <h1 class="text-lg font-semibold text-neutral-900">PO Overview</h1>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button"
+                        class="rounded-full border border-neutral-200 px-4 py-2 text-xs font-semibold text-neutral-600 hover:border-neutral-300"
+                        @click="resetFilters">
+                        Reset filters
+                    </button>
+                    <button type="button"
+                        class="rounded-full border border-neutral-200 px-4 py-2 text-xs font-semibold text-red-500 hover:border-red-400"
+                        @click="handleLogout">
+                        Logout
+                    </button>
+                </div>
+            </div>
 
             <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div class="space-y-2">
@@ -166,6 +183,7 @@ watch(visibleColumnKeys, (value) => {
 })
 
 const { apiPublic } = useApi()
+const router = useRouter()
 
 const getTodayDate = () => {
     const now = new Date()
@@ -188,17 +206,28 @@ const pageSizeOptions = [10, 20, 50]
 
 let searchDebounce
 
+const authCookie = useCookie('po-auth')
+
 const teamOptions = computed(() => {
     const items = divisionOptions.value
-    const formatted = items.map(({ division, totalOrders }) => ({
+    if (!authCookie.value) return []
+
+    const mapped = items.map(({ division }) => ({
         label: `${division || '-'}`,
         value: division,
     }))
-    return formatted
+
+    if (authCookie.value.role === 'EMPLOYEE') {
+        return mapped.filter((option) => option.value === authCookie.value.division)
+    }
+
+    return mapped
 })
 const firstRow = computed(() => (currentPage.value - 1) * perPage.value)
 const apiFilters = computed(() => ({
-    division: team.value || undefined,
+    division: authCookie.value?.role === 'EMPLOYEE'
+        ? authCookie.value?.division
+        : team.value || undefined,
     arrivalDate: deliveryDate.value || undefined,
     itemDesc: item.value.trim() || undefined,
 }))
@@ -245,6 +274,9 @@ const fetchDivisions = async () => {
     try {
         const { data = [] } = await apiPublic.get('/z_po_pl_po/divisions')
         divisionOptions.value = Array.isArray(data) ? data : []
+        if (authCookie.value?.role === 'EMPLOYEE' && authCookie.value?.division) {
+            team.value = authCookie.value.division
+        }
     } catch (error) {
         console.log(error)
         divisionOptions.value = []
@@ -254,6 +286,18 @@ const fetchDivisions = async () => {
 const triggerFilterFetch = () => {
     currentPage.value = 1
     fetchPlPoPl(1, perPage.value)
+}
+
+const resetFilters = () => {
+    deliveryDate.value = getTodayDate()
+    team.value = authCookie.value?.role === 'EMPLOYEE' ? authCookie.value?.division || null : null
+    item.value = ''
+    triggerFilterFetch()
+}
+
+const handleLogout = async () => {
+    authCookie.value = null
+    await router.push('/login')
 }
 
 watch([deliveryDate, team], () => {

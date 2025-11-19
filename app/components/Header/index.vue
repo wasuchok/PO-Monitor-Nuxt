@@ -35,14 +35,15 @@
                 </RouterLink>
             </nav>
 
-            <div class="flex flex-col gap-3 md:flex-1 md:flex-row md:items-center md:justify-end">
+            <div class="flex flex-col gap-3 text-sm md:flex-1 md:flex-row md:items-center md:justify-end">
                 <div class="flex items-center gap-3">
-                    <div class="text-right text-sm leading-tight">
-                        <p class="font-semibold">Wasuchok Jainam</p>
+                    <div class="text-right leading-tight">
+                        <p class="font-semibold">{{ displayName }}</p>
+                        <p class="text-white/70">{{ displayDept }}</p>
                     </div>
                     <div
-                        class="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-sm font-semibold">
-                        AD
+                        class="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-sm font-semibold uppercase">
+                        {{ displayInitials }}
                     </div>
                 </div>
             </div>
@@ -51,10 +52,11 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 const route = useRoute()
 const isMobileNavOpen = ref(false)
+const authCookie = useCookie('po-auth')
 
 const navItems = [
     {
@@ -74,6 +76,13 @@ const isActive = (path) => route.path.startsWith(path)
 const toggleMobileNav = () => {
     isMobileNavOpen.value = !isMobileNavOpen.value
 }
+
+const displayName = computed(() => authCookie.value?.userId || 'Guest')
+const displayDept = computed(() => authCookie.value?.dept || 'Unknown')
+const displayInitials = computed(() => {
+    const source = authCookie.value?.userId || 'GU'
+    return source.slice(0, 2)
+})
 
 watch(
     () => route.path,
