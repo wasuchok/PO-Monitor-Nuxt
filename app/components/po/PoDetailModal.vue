@@ -6,6 +6,7 @@
                 @click.self="emitClose">
                 <Transition name="po-modal-scale" appear>
                     <div v-if="isOpen"
+                        :lang="langAttr"
                         class="flex w-full max-w-4xl max-h-[90vh] flex-col rounded-3xl bg-white/95 p-6 shadow-xl lg:p-8">
                         <div class="flex flex-wrap items-start justify-between gap-4 pb-4">
                             <div class="space-y-1">
@@ -122,9 +123,10 @@
 </template>
 
 <script setup lang="ts">
-import type { PoDetailEntry } from '~/types/purchase-orders';
+import { computed } from 'vue'
+import type { PoDetailEntry } from '~/types/purchase-orders'
 
-withDefaults(
+const props = withDefaults(
     defineProps<{
         isOpen: boolean
         isLoading: boolean
@@ -134,6 +136,7 @@ withDefaults(
         activePoNumber: string
         formatThaiDate: (date?: string | null) => string
         formatCurrency: (value?: number | null) => string
+        language?: 'en' | 'th'
     }>(),
     {
         isOpen: false,
@@ -142,8 +145,11 @@ withDefaults(
         detailErrorMessage: null,
         poDetailEntries: () => [],
         activePoNumber: '',
+        language: 'en',
     },
 )
+
+const langAttr = computed(() => (props.language === 'th' ? 'th' : 'en'))
 
 const emit = defineEmits<{ (event: 'close'): void }>()
 
