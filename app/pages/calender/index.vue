@@ -24,13 +24,22 @@
                         กลับไปวันนี้
                     </button>
                 </div>
+                <div class="flex flex-wrap gap-2">
+                    <span v-for="status in statusLegend" :key="status.value"
+                        :class="status.className"
+                        class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold">
+                        {{ status.label }}
+                    </span>
+                </div>
                 <div class="space-y-4">
                     <div v-if="upcomingEntries.length" class="space-y-3">
                         <article v-for="(entry, index) in upcomingEntries" :key="entry.po_no ?? `upcoming-${index}`"
                             class="flex flex-col gap-2 rounded-xl border border-neutral-100 p-3 shadow-sm ring-1 ring-black/5 transition hover:border-primary-200">
                             <div class="flex items-center justify-between">
                                 <p class="text-sm font-semibold text-neutral-700">{{ entry.po_no || 'PO -' }}</p>
-                                <span class="text-[11px] font-semibold text-primary-500">
+                                <span
+                                    :class="getStatusBadgeClass(entry.status)"
+                                    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold">
                                     {{ getStatusLabel(entry.status) }}
                                 </span>
                             </div>
@@ -51,8 +60,8 @@
 
         <PoDetailModal :is-open="isDetailModalOpen" :is-loading="isDetailLoading" :detail-header="detailHeader"
             :detail-error-message="detailErrorMessage" :po-detail-entries="poDetailEntries"
-            :active-po-number="activePoNumber" :format-thai-date="formatThaiDate"
-            :format-currency="formatCurrency" @close="closeDetailModal" />
+            :active-po-number="activePoNumber" :format-thai-date="formatThaiDate" :format-currency="formatCurrency"
+            @close="closeDetailModal" />
     </section>
 </template>
 
@@ -69,9 +78,9 @@ type QalendarPeriodPayload = {
 }
 
 const STATUS_LABEL_LOOKUP: Record<number, string> = {
-    1: 'Draft',
-    2: 'Partial',
-    3: 'Completed',
+    1: 'Other',
+    2: 'Waiting',
+    3: 'Received',
 }
 
 const STATUS_COLOR_LOOKUP: Record<number, CalendarEvent['color']> = {
@@ -79,6 +88,20 @@ const STATUS_COLOR_LOOKUP: Record<number, CalendarEvent['color']> = {
     2: 'blue',
     3: 'green',
 }
+const STATUS_BADGE_LOOKUP: Record<number, string> = {
+    1: 'bg-gray-100 text-gray-600 border border-gray-200',
+    2: 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+    3: 'bg-green-50 text-green-700 border border-green-200',
+}
+const statusLegend = computed(() =>
+    Object.entries(STATUS_LABEL_LOOKUP).map(([value, label]) => ({
+        value: Number(value),
+        label,
+        className:
+            STATUS_BADGE_LOOKUP[Number(value)] ??
+            'bg-slate-100 text-slate-600 border border-slate-200',
+    })),
+)
 const MAX_UPCOMING_ITEMS = 5
 const thaiDateFormatter = new Intl.DateTimeFormat('th-TH', {
     day: '2-digit',
@@ -107,6 +130,9 @@ const detailHeader = computed(() => poDetailEntries.value[0] ?? null)
 
 const getStatusLabel = (status?: number | null) =>
     STATUS_LABEL_LOOKUP[status ?? 0] ?? 'Unknown'
+
+const getStatusBadgeClass = (status?: number | null) =>
+    STATUS_BADGE_LOOKUP[status ?? 0] ?? 'bg-slate-100 text-slate-600'
 
 const resolveEventColor = (status?: number | null) =>
     STATUS_COLOR_LOOKUP[status ?? 0] ?? 'purple'
@@ -191,6 +217,7 @@ const fetchCalendarEntries = async (date: Date = selectedDate.value) => {
                     description: [statusLabel, entry.division ? `Division: ${entry.division}` : null]
                         .filter(Boolean)
                         .join(' | '),
+                    statusLabel,
                     color: resolveEventColor(entry.status),
                 }
             })
