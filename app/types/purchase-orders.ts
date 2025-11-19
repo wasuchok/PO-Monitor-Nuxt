@@ -6,6 +6,8 @@ export interface CalendarEvent {
     time: { start: string; end: string }
     description?: string
     color?: CalendarEventColor
+    className?: string
+    isCustom?: boolean | string[]
 }
 
 export type CalendarEntry = {

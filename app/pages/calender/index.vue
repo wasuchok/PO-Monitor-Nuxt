@@ -5,7 +5,14 @@
                 <div class="relative rounded-md bg-white p-1 shadow-sm  lg:col-span-3 lg:p-2 is-light-mode">
                     <Qalendar class="min-h-[80vh]" :events="poEvents" :config="calendarConfig"
                         :selected-date="selectedDate" :is-loading="isCalendarLoading"
-                        @updated-period="handlePeriodChange" @event-was-clicked="handleEventClick" />
+                        @updated-period="handlePeriodChange" @event-was-clicked="handleEventClick">
+                        <template #monthEvent="{ eventData }">
+                            <div class="po-month-event" :class="eventData?.className">
+                                <span class="po-month-event__title">{{ eventData?.title || 'PO' }}</span>
+
+                            </div>
+                        </template>
+                    </Qalendar>
                     <div v-if="isCalendarLoading"
                         class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-md bg-white/80">
                         <span class="text-sm font-semibold text-neutral-500">กำลังโหลดข้อมูล...</span>
@@ -90,6 +97,11 @@ const STATUS_BADGE_LOOKUP: Record<number, string> = {
     1: 'bg-gray-100 text-gray-600 border border-gray-200',
     2: 'bg-yellow-50 text-yellow-700 border border-yellow-200',
     3: 'bg-green-50 text-green-700 border border-green-200',
+}
+const EVENT_BG_CLASS_LOOKUP: Record<number, string> = {
+    1: 'bg-gray-100 border border-gray-200 text-gray-700',
+    2: 'bg-yellow-100 border border-yellow-200 text-yellow-800',
+    3: 'bg-green-100 border border-green-200 text-green-800',
 }
 const statusLegend = computed(() =>
     Object.entries(STATUS_LABEL_LOOKUP).map(([value, label]) => ({
@@ -203,8 +215,7 @@ const fetchCalendarEntries = async (date: Date = selectedDate.value) => {
         poEvents.value = entries
             .filter((entry) => Boolean(entry.arrival_date))
             .map((entry, index) => {
-                const time = normalizeEventDate(entry.arrival_date);
-                const statusLabel = getStatusLabel(entry.status);
+                const time = normalizeEventDate(entry.arrival_date)
 
                 return {
                     id: entry.po_no ?? `po-${index}`,
@@ -212,13 +223,13 @@ const fetchCalendarEntries = async (date: Date = selectedDate.value) => {
                         ? `${entry.po_no}${entry.division ? ` (${entry.division})` : ''}`
                         : `PO ${index + 1}`,
                     time,
-                    description: [statusLabel, entry.division ? `Division: ${entry.division}` : null]
-                        .filter(Boolean)
-                        .join(' | '),
-                    statusLabel,
+                    description: entry.division ?? '',
                     color: resolveEventColor(entry.status),
+                    className: getEventBgClass(entry.status),
+                    isCustom: ['month'],
                 }
             })
+
 
     } catch (error) {
         console.error('Unable to load PO calendar', error)
@@ -313,4 +324,44 @@ const calendarConfig: any = {
         }
     }
 }
+
+const getEventBgClass = (status?: number | null) =>
+    EVENT_BG_CLASS_LOOKUP[status ?? 0] ?? EVENT_BG_CLASS_LOOKUP[1]
 </script>
+
+<style scoped>
+.qalendar__event-color {
+    display: none !important;
+}
+
+.calendar-month__event {
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+
+.po-month-event {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    width: 100%;
+    border-radius: 999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.po-month-event__title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.po-month-event__meta {
+    font-size: 0.65rem;
+    font-weight: 500;
+    opacity: 0.8;
+}
+</style>
