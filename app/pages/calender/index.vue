@@ -24,14 +24,11 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-500">รายการถัดไป</p>
-                        <p class="text-xs text-neutral-400">PO ที่กำลังจะถึง 5 รายการ</p>
+                        <p class="text-xs text-neutral-400">ที่กำลังจะถึง 5 รายการ</p>
                     </div>
-                    <button class="text-xs font-semibold text-primary-500 hover:text-primary-600"
-                        @click="selectedDate = new Date()">
-                        กลับไปวันนี้
-                    </button>
+
                 </div>
-                <div class="flex flex-wrap gap-2">
+                <div class="flex flex-wrap ">
                     <span v-for="status in statusLegend" :key="status.value" :class="status.className"
                         class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold">
                         {{ status.label }}

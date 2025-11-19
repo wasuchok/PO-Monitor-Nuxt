@@ -2,12 +2,12 @@
     <Teleport to="body">
         <Transition name="po-modal-fade" appear>
             <div v-if="isOpen"
-                class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8 backdrop-blur-sm"
+                class="po-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8 backdrop-blur-sm"
                 @click.self="emitClose">
                 <Transition name="po-modal-scale" appear>
                     <div v-if="isOpen"
                         :lang="langAttr"
-                        class="flex w-full max-w-4xl max-h-[90vh] flex-col rounded-3xl bg-white/95 p-6 shadow-xl lg:p-8">
+                        class="po-modal-panel flex w-full max-w-4xl max-h-[90vh] flex-col rounded-3xl bg-white/95 p-6 shadow-xl lg:p-8">
                         <div class="flex flex-wrap items-start justify-between gap-4 pb-4">
                             <div class="space-y-1">
                                 <p class="text-[11px] font-semibold uppercase tracking-[0.4em] text-neutral-400">
@@ -159,9 +159,14 @@ const emitClose = () => {
 </script>
 
 <style scoped>
+.po-modal-overlay,
+.po-modal-panel {
+    will-change: opacity, transform;
+}
+
 .po-modal-fade-enter-active,
 .po-modal-fade-leave-active {
-    transition: opacity 0.2s ease;
+    transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .po-modal-fade-enter-from,
@@ -171,13 +176,14 @@ const emitClose = () => {
 
 .po-modal-scale-enter-active,
 .po-modal-scale-leave-active {
-    transition: opacity 0.25s ease, transform 0.25s ease;
+    transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .po-modal-scale-enter-from,
 .po-modal-scale-leave-to {
     opacity: 0;
-    transform: scale(0.97) translateY(8px);
+    transform: translateY(12px) scale(0.96);
 }
 
 .po-table-head {
