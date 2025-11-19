@@ -101,9 +101,9 @@ import VSelect from 'vue-select'
 import 'vue-select/dist/vue-select.css'
 
 const STATUS_LOOKUP = {
-    1: 'Draft',
-    2: 'Partial',
-    3: 'Completed',
+    1: 'Open',
+    2: 'Approve',
+    3: 'Received',
 }
 
 const tableColumns = [
@@ -284,12 +284,12 @@ const handlePageChange = (event) => {
 
 const getStatusClass = (status) => {
     switch (status) {
-        case 'Completed':
+        case 'Received':
             return 'inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700'
-        case 'Partial':
+        case 'Approve':
             return 'inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700'
-        case 'Draft':
-            return 'inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-600'
+        case 'Open':
+            return 'inline-flex items-center rounded-full bg-black px-3 py-1 text-xs font-semibold text-white'
         default:
             return 'inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600'
     }
