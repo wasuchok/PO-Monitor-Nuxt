@@ -25,8 +25,7 @@
                     </button>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <span v-for="status in statusLegend" :key="status.value"
-                        :class="status.className"
+                    <span v-for="status in statusLegend" :key="status.value" :class="status.className"
                         class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold">
                         {{ status.label }}
                     </span>
@@ -37,8 +36,7 @@
                             class="flex flex-col gap-2 rounded-xl border border-neutral-100 p-3 shadow-sm ring-1 ring-black/5 transition hover:border-primary-200">
                             <div class="flex items-center justify-between">
                                 <p class="text-sm font-semibold text-neutral-700">{{ entry.po_no || 'PO -' }}</p>
-                                <span
-                                    :class="getStatusBadgeClass(entry.status)"
+                                <span :class="getStatusBadgeClass(entry.status)"
                                     class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold">
                                     {{ getStatusLabel(entry.status) }}
                                 </span>
@@ -78,13 +76,13 @@ type QalendarPeriodPayload = {
 }
 
 const STATUS_LABEL_LOOKUP: Record<number, string> = {
-    1: 'Other',
-    2: 'Waiting',
+    1: 'Open',
+    2: 'Approve',
     3: 'Received',
 }
 
 const STATUS_COLOR_LOOKUP: Record<number, CalendarEvent['color']> = {
-    1: 'yellow',
+    1: 'gray',
     2: 'blue',
     3: 'green',
 }
@@ -203,10 +201,10 @@ const fetchCalendarEntries = async (date: Date = selectedDate.value) => {
         const entries = Array.isArray(response?.data) ? response.data : []
         updateUpcomingEntries(entries)
         poEvents.value = entries
-            .filter((entry) => Boolean(entry.po_date))
+            .filter((entry) => Boolean(entry.arrival_date))
             .map((entry, index) => {
-                const time = normalizeEventDate(entry.po_date)
-                const statusLabel = getStatusLabel(entry.status)
+                const time = normalizeEventDate(entry.arrival_date);
+                const statusLabel = getStatusLabel(entry.status);
 
                 return {
                     id: entry.po_no ?? `po-${index}`,
@@ -221,6 +219,7 @@ const fetchCalendarEntries = async (date: Date = selectedDate.value) => {
                     color: resolveEventColor(entry.status),
                 }
             })
+
     } catch (error) {
         console.error('Unable to load PO calendar', error)
         poEvents.value = []
@@ -268,22 +267,29 @@ const formatCurrency = (value?: number | null) => {
 
 watch(
     selectedDate,
-    (next, previous) => {
+    (next) => {
         if (!next) return
-        if (
-            previous &&
-            previous.getMonth() === next.getMonth() &&
-            previous.getFullYear() === next.getFullYear()
-        ) {
-            return
-        }
         fetchCalendarEntries(next)
     },
     { immediate: true },
 )
 
+const getPeriodFocusDate = (period: QalendarPeriodPayload) => {
+    if (!period) return null
+    if (period.selectedDate) return new Date(period.selectedDate)
+    if (period.start && period.end) {
+        const midpoint = (period.start.getTime() + period.end.getTime()) / 2
+        return new Date(midpoint)
+    }
+    if (period.start) return new Date(period.start)
+    return null
+}
+
+const normalizeToMonthStart = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1, 12)
+
 const handlePeriodChange = (period: QalendarPeriodPayload) => {
-    const nextDate = period?.start ?? period?.selectedDate
+    const focusDate = getPeriodFocusDate(period)
+    const nextDate = focusDate ? normalizeToMonthStart(focusDate) : null
     if (!nextDate) return
     selectedDate.value = new Date(nextDate)
 }
