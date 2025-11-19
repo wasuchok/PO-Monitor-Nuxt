@@ -176,7 +176,7 @@ const perPage = ref(10)
 const totalRows = ref(0)
 const isLoading = ref(false)
 const pageSizeOptions = [10, 20, 50]
-const wait = (ms = 5) => new Promise((resolve) => setTimeout(resolve, ms))
+
 let searchDebounce
 
 const teamOptions = computed(() => {
@@ -207,7 +207,7 @@ const fetchPlPoPl = async (page = currentPage.value, pageSize = perPage.value) =
                     ...filters,
                 },
             }),
-            wait(),
+
         ])
 
         const { data: payload = [], pagination } = response
