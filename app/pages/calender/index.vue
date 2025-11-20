@@ -2,7 +2,7 @@
     <section lang="th" class="space-y-6">
         <div class="grid gap-6 lg:grid-cols-4">
             <ClientOnly>
-                <div class="relative rounded-md bg-white p-1 shadow-sm  lg:col-span-3 lg:p-2 is-light-mode">
+                <div class="relative receipt-card rounded-[18px] border border-neutral-200 bg-white/95 p-2 shadow-sm ring-1 ring-primary-50 lg:col-span-3">
                     <Qalendar class="min-h-[80vh]" :events="poEvents" :config="calendarConfig"
                         :selected-date="selectedDate" :is-loading="isCalendarLoading"
                         @updated-period="handlePeriodChange" @event-was-clicked="handleEventClick">
@@ -14,13 +14,13 @@
                         </template>
                     </Qalendar>
                     <div v-if="isCalendarLoading"
-                        class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-md bg-white/80">
+                        class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-[18px] bg-white/80">
                         <span class="text-sm font-semibold text-neutral-500">กำลังโหลดข้อมูล...</span>
                     </div>
                 </div>
             </ClientOnly>
 
-            <aside class="space-y-2 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+            <aside class="space-y-2 rounded-2xl border border-neutral-200 bg-white/95 p-5 shadow-sm ring-1 ring-primary-50">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-500">รายการถัดไป</p>
@@ -359,5 +359,30 @@ const getEventBgClass = (status?: number | null) =>
     font-size: 0.65rem;
     font-weight: 500;
     opacity: 0.8;
+}
+
+.receipt-card {
+    position: relative;
+    background-image: radial-gradient(circle at 1px 1px, rgba(238, 105, 131, 0.02) 1px, transparent 0);
+    background-size: 12px 12px;
+}
+
+.receipt-card::before,
+.receipt-card::after {
+    content: '';
+    position: absolute;
+    top: 14px;
+    bottom: 14px;
+    width: 10px;
+    background: radial-gradient(circle at 5px 8px, transparent 6px, #ffffff 6px, #ffffff 7px, transparent 7px) center/10px 18px repeat-y;
+    pointer-events: none;
+}
+
+.receipt-card::before {
+    left: -6px;
+}
+
+.receipt-card::after {
+    right: -6px;
 }
 </style>
