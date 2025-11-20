@@ -8,6 +8,7 @@
       aria-label="Loading PO Monitor"
     >
       <article class="splash-panel">
+        <div class="receipt-tear top"></div>
         <div class="splash-content">
           <div class="logo-wrapper">
             <span class="logo-pulse"></span>
@@ -16,11 +17,13 @@
           <div class="brand-block">
             <p class="brand">PO MONITOR</p>
             <p class="tagline">Preparing your dashboard</p>
+            <p class="meta">Login ticket · {{ new Date().toLocaleTimeString() }}</p>
           </div>
           <div class="progress">
             <span class="progress-bar"></span>
           </div>
         </div>
+        <div class="receipt-tear bottom"></div>
       </article>
     </div>
   </transition>
@@ -47,11 +50,8 @@ defineProps({
   display: flex;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.2), transparent 45%),
-    radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.15), transparent 55%),
-    linear-gradient(125deg, rgba(255, 245, 247, 0.96), rgba(238, 105, 131, 0.98));
-  backdrop-filter: blur(6px);
+  background: linear-gradient(145deg, #fff8fa, #f6f1f3);
+  backdrop-filter: blur(3px);
 }
 
 .splash-screen::before,
@@ -60,7 +60,7 @@ defineProps({
   position: absolute;
   border-radius: 999px;
   filter: blur(0);
-  opacity: 0.5;
+  opacity: 0.35;
   animation: float 6s ease-in-out infinite;
 }
 
@@ -69,7 +69,7 @@ defineProps({
   height: 220px;
   top: 15%;
   right: 20%;
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(238, 105, 131, 0.12);
 }
 
 .splash-screen::after {
@@ -77,7 +77,7 @@ defineProps({
   height: 160px;
   bottom: 18%;
   left: 18%;
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.04);
   animation-delay: 1.2s;
 }
 
@@ -85,10 +85,11 @@ defineProps({
   position: relative;
   padding: 3rem 3.5rem;
   border-radius: 2rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 35px 80px rgba(238, 105, 131, 0.4);
-  backdrop-filter: blur(12px);
+  background: #ffffff;
+  border: 1px dashed #f0c8d3;
+  box-shadow: 0 26px 60px rgba(238, 105, 131, 0.2);
+  backdrop-filter: blur(6px);
+  overflow: hidden;
 }
 
 .splash-content {
@@ -106,8 +107,8 @@ defineProps({
   width: 96px;
   height: 96px;
   border-radius: 1.5rem;
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
+  background: #fff7fa;
+  box-shadow: 0 20px 45px rgba(238, 105, 131, 0.18);
   overflow: hidden;
 }
 
@@ -121,7 +122,7 @@ defineProps({
   position: absolute;
   inset: 6px;
   border-radius: 1.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(238, 105, 131, 0.3);
   animation: pulse 1.8s ease-in-out infinite;
 }
 
@@ -135,13 +136,19 @@ defineProps({
   font-size: 0.75rem;
   letter-spacing: 0.55em;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
+  color: #e44f73;
 }
 
 .tagline {
   font-size: 0.85rem;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.8);
+  color: #7f7f8c;
+}
+
+.meta {
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: #a3a3ad;
 }
 
 .progress {
@@ -149,7 +156,7 @@ defineProps({
   width: 160px;
   height: 4px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(238, 105, 131, 0.12);
   overflow: hidden;
 }
 
@@ -158,8 +165,24 @@ defineProps({
   inset: 0;
   width: 60%;
   border-radius: inherit;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.9));
+  background: linear-gradient(90deg, #f7c8d6, #ee6983);
   animation: progress 1.5s ease-in-out infinite;
+}
+
+.receipt-tear {
+  width: 100%;
+  height: 12px;
+  background:
+    radial-gradient(circle at 12px 6px, transparent 6px, #f6d9e2 6px, #f6d9e2 7px, transparent 7px) left/24px 12px repeat-x,
+    linear-gradient(to right, transparent 0, transparent 100%);
+}
+
+.receipt-tear.top {
+  margin: 0 -3.5rem 1rem;
+}
+
+.receipt-tear.bottom {
+  margin: 1rem -3.5rem 0;
 }
 
 .splash-fade-enter-active,

@@ -22,11 +22,12 @@
             </ClientOnly>
 
             <aside
-                class="receipt-card space-y-3 rounded-2xl border border-neutral-200 bg-white/95 p-5 shadow-sm ring-1 ring-primary-50">
+                class="receipt-card space-y-3 rounded-2xl border border-neutral-200 bg-white/95 p-5 shadow-sm ring-1 ring-primary-50 max-h-[80vh] overflow-hidden">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-500">รายการถัดไป</p>
-                        <p class="text-xs text-neutral-400">PO กำลังจะถึง (สูงสุด {{ MAX_UPCOMING_ITEMS }} รายการ)</p>
+                        <p class="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-500">รายการ PO วันนี้
+                        </p>
+                        <p class="text-xs text-neutral-400">รวม {{ upcomingEntries.length || 0 }} รายการ</p>
                     </div>
                     <span
                         class="rounded-full border border-dashed border-primary-100 bg-primary-50 px-2.5 py-0.5 text-[10px] font-semibold text-primary-600">
@@ -40,10 +41,12 @@
                     </span>
                 </div>
                 <div class="receipt-tear my-2"></div>
-                <div class="space-y-3">
-                    <div v-if="upcomingEntries.length" class="space-y-3">
+                <div
+                    class="space-y-3 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-neutral-200 scrollbar-track-transparent">
+                    <div v-if="upcomingEntries.length > 0" class="space-y-3">
                         <article v-for="(entry, index) in upcomingEntries" :key="entry.po_no ?? `upcoming-${index}`"
-                            class="flex flex-col gap-2 rounded-xl border border-dashed border-neutral-200 bg-white/90 p-3 shadow-[0_10px_30px_-26px_rgba(0,0,0,0.35)] ring-1 ring-primary-50/50 transition hover:border-primary-200">
+                            class="flex flex-col gap-2 rounded-xl border border-dashed border-neutral-200 bg-white/90 p-3 shadow-[0_10px_30px_-26px_rgba(0,0,0,0.35)] ring-1 ring-primary-50/50 transition hover:border-primary-200 cursor-pointer"
+                            @click="handleUpcomingClick(entry)">
                             <div class="flex items-center justify-between">
                                 <p class="text-sm font-semibold text-neutral-700">{{ entry.po_no || 'PO -' }}</p>
                                 <span :class="getStatusBadgeClass(entry.status)"
@@ -75,7 +78,7 @@
 
 <script setup lang="ts">
 import { Qalendar } from 'qalendar'
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import PoDetailModal from '~/components/po/PoDetailModal.vue'
 import type { CalendarApiResponse, CalendarEntry, CalendarEvent, PoDetailEntry } from '~/types/purchase-orders'
 
@@ -115,7 +118,6 @@ const statusLegend = computed(() =>
             'bg-slate-100 text-slate-600 border border-slate-200',
     })),
 )
-const MAX_UPCOMING_ITEMS = 5
 const thaiDateFormatter = new Intl.DateTimeFormat('th-TH', {
     day: '2-digit',
     month: 'short',
@@ -191,11 +193,35 @@ const handleEventClick = (eventData: any) => {
     fetchPoDetail(String(poNumber))
 };
 
+const handleUpcomingClick = (entry: CalendarEntry) => {
+    if (!entry?.po_no) return
+    fetchPoDetail(String(entry.po_no))
+}
+
 const closeDetailModal = () => {
     isDetailModalOpen.value = false
     activePoNumber.value = ''
     poDetailEntries.value = []
     detailErrorMessage.value = null
+}
+
+const fetchTodayEntries = async () => {
+    try {
+        isCalendarLoading.value = true
+        const response = await apiPublic.get<CalendarEntry[]>('/z_po_pl_po/today', {
+            params: {
+                division: divisionFilter.value,
+            },
+        })
+        const payload = response?.data?.data ?? response?.data
+        const entries = Array.isArray(payload) ? payload : []
+        upcomingEntries.value = entries
+    } catch (error) {
+        console.error('Unable to load today\'s PO list', error)
+        upcomingEntries.value = []
+    } finally {
+        isCalendarLoading.value = false
+    }
 }
 
 const fetchCalendarEntries = async (date: Date = selectedDate.value) => {
@@ -215,8 +241,8 @@ const fetchCalendarEntries = async (date: Date = selectedDate.value) => {
             },
         })
 
-        const entries = Array.isArray(response?.data) ? response.data : []
-        updateUpcomingEntries(entries)
+        const payload = response?.data?.data ?? response?.data
+        const entries = Array.isArray(payload) ? payload : []
         poEvents.value = entries
             .filter((entry) => Boolean(entry.arrival_date))
             .map((entry, index) => {
@@ -242,31 +268,6 @@ const fetchCalendarEntries = async (date: Date = selectedDate.value) => {
     } finally {
         isCalendarLoading.value = false
     }
-}
-
-const updateUpcomingEntries = (entries: CalendarEntry[]) => {
-    if (!Array.isArray(entries) || entries.length === 0) {
-        upcomingEntries.value = []
-        return
-    }
-
-    const today = new Date()
-    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-
-    const sorted = entries
-        .map((entry) => ({
-            entry,
-            date: entry.po_date ? new Date(entry.po_date) : null,
-        }))
-        .filter(({ date }) => date instanceof Date && !Number.isNaN(date.getTime()) && date >= startOfToday)
-        .sort((a, b) => {
-            if (!a.date || !b.date) return 0
-            return a.date.getTime() - b.date.getTime()
-        })
-        .slice(0, MAX_UPCOMING_ITEMS)
-        .map(({ entry }) => entry)
-
-    upcomingEntries.value = sorted
 }
 
 const formatThaiDate = (dateString?: string | null) => {
@@ -297,6 +298,19 @@ watch(
     },
     { immediate: true },
 )
+
+watch(
+    divisionFilter,
+    () => {
+        fetchTodayEntries()
+        fetchCalendarEntries(selectedDate.value)
+    },
+    { immediate: true },
+)
+
+onMounted(() => {
+    fetchTodayEntries()
+})
 
 const getPeriodFocusDate = (period: QalendarPeriodPayload) => {
     if (!period) return null
@@ -379,7 +393,7 @@ const getEventBgClass = (status?: number | null) =>
 
 .receipt-card {
     position: relative;
-    background-image: radial-gradient(circle at 1px 1px, rgba(238, 105, 131, 0.02) 1px, transparent 0);
+    background-image: radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.015) 1px, transparent 0);
     background-size: 12px 12px;
 }
 

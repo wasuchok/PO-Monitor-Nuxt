@@ -12,9 +12,10 @@
                 <p class="text-sm text-neutral-500">Welcome back. Use your Employee ID and password.</p>
             </div>
 
-            <div class="receipt-card rounded-[20px] border border-primary-100 bg-white/90 p-6 shadow-[0_20px_60px_-35px_rgba(238,105,131,0.6)]">
+            <div
+                class="receipt-card rounded-[20px] border border-primary-100 bg-white/90 p-6 shadow-[0_20px_60px_-35px_rgba(238,105,131,0.6)]">
                 <div class="flex items-center justify-between text-[11px] text-neutral-500">
-                    <span class="font-semibold text-neutral-700">Login receipt</span>
+
                     <span>{{ printedAt }}</span>
                 </div>
                 <div class="receipt-tear my-3"></div>
@@ -42,7 +43,8 @@
                         <span v-if="!isSubmitting">Sign in</span>
                         <span v-else class="flex items-center gap-2">
                             <svg class="h-4 w-4 animate-spin text-white/90" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4" />
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                             </svg>
                             Signing in...
@@ -62,9 +64,9 @@
 </template>
 
 <script setup lang="ts">
+import Swal from 'sweetalert2'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import Swal from 'sweetalert2'
 
 definePageMeta({
     layout: false,

@@ -1,12 +1,9 @@
 <script setup>
-
-
+definePageMeta({
+    redirect: '/dashboard',
+})
 </script>
 
 <template>
-    <div class="min-h-screen bg-slate-50">
-        <Header />
-
-
-    </div>
+    <div></div>
 </template>
