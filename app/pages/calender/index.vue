@@ -2,7 +2,8 @@
     <section lang="th" class="space-y-6">
         <div class="grid gap-6 lg:grid-cols-4">
             <ClientOnly>
-                <div class="relative receipt-card rounded-[18px] border border-neutral-200 bg-white/95 p-2 shadow-sm ring-1 ring-primary-50 lg:col-span-3">
+                <div
+                    class="relative receipt-card rounded-[18px] border border-neutral-200 bg-white/95 p-2 shadow-sm ring-1 ring-primary-50 lg:col-span-3">
                     <Qalendar class="min-h-[80vh]" :events="poEvents" :config="calendarConfig"
                         :selected-date="selectedDate" :is-loading="isCalendarLoading"
                         @updated-period="handlePeriodChange" @event-was-clicked="handleEventClick">
@@ -20,24 +21,29 @@
                 </div>
             </ClientOnly>
 
-            <aside class="space-y-2 rounded-2xl border border-neutral-200 bg-white/95 p-5 shadow-sm ring-1 ring-primary-50">
+            <aside
+                class="receipt-card space-y-3 rounded-2xl border border-neutral-200 bg-white/95 p-5 shadow-sm ring-1 ring-primary-50">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-500">รายการถัดไป</p>
-                        <p class="text-xs text-neutral-400">รายการ PO ที่เปิดอยู่ 5 รายการวันนี้</p>
+                        <p class="text-xs text-neutral-400">PO กำลังจะถึง (สูงสุด {{ MAX_UPCOMING_ITEMS }} รายการ)</p>
                     </div>
-
+                    <span
+                        class="rounded-full border border-dashed border-primary-100 bg-primary-50 px-2.5 py-0.5 text-[10px] font-semibold text-primary-600">
+                        {{ upcomingEntries.length || 0 }} รายการ
+                    </span>
                 </div>
-                <div class="flex flex-wrap ">
+                <div class="flex flex-wrap gap-2">
                     <span v-for="status in statusLegend" :key="status.value" :class="status.className"
                         class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold">
                         {{ status.label }}
                     </span>
                 </div>
-                <div class="space-y-4">
+                <div class="receipt-tear my-2"></div>
+                <div class="space-y-3">
                     <div v-if="upcomingEntries.length" class="space-y-3">
                         <article v-for="(entry, index) in upcomingEntries" :key="entry.po_no ?? `upcoming-${index}`"
-                            class="flex flex-col gap-2 rounded-xl border border-neutral-100 p-3 shadow-sm ring-1 ring-black/5 transition hover:border-primary-200">
+                            class="flex flex-col gap-2 rounded-xl border border-dashed border-neutral-200 bg-white/90 p-3 shadow-[0_10px_30px_-26px_rgba(0,0,0,0.35)] ring-1 ring-primary-50/50 transition hover:border-primary-200">
                             <div class="flex items-center justify-between">
                                 <p class="text-sm font-semibold text-neutral-700">{{ entry.po_no || 'PO -' }}</p>
                                 <span :class="getStatusBadgeClass(entry.status)"
@@ -45,11 +51,11 @@
                                     {{ getStatusLabel(entry.status) }}
                                 </span>
                             </div>
-                            <p class="text-xs text-neutral-500">
+                            <div class="flex items-center gap-2 text-xs text-neutral-500 flex-wrap">
                                 <span class="font-medium text-neutral-700">{{ formatThaiDate(entry.po_date) }}</span>
                                 <span class="text-neutral-300">•</span>
                                 <span class="text-neutral-500">{{ entry.division || 'ทุก Division' }}</span>
-                            </p>
+                            </div>
                         </article>
                     </div>
                     <div v-else
@@ -122,6 +128,7 @@ const currencyFormatter = new Intl.NumberFormat('th-TH', {
 })
 
 const { apiPublic } = useApi()
+const authCookie = useCookie('po-auth')
 const selectedDate = ref(new Date())
 const isCalendarLoading = ref(false)
 const isDetailModalOpen = ref(false)
@@ -204,6 +211,7 @@ const fetchCalendarEntries = async (date: Date = selectedDate.value) => {
                 month,
                 year,
                 perPage: 0,
+                division: divisionFilter.value,
             },
         })
 
@@ -272,6 +280,14 @@ const formatCurrency = (value?: number | null) => {
     if (typeof value !== 'number') return '-'
     return currencyFormatter.format(value)
 }
+
+const divisionFilter = computed(() => {
+    if (!authCookie.value) return undefined
+    if (authCookie.value.role && authCookie.value.role !== 'ADMIN') {
+        return authCookie.value.division || undefined
+    }
+    return undefined
+})
 
 watch(
     selectedDate,
