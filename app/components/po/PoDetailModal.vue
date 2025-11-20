@@ -12,23 +12,21 @@
                         <img src="/bill.png" alt="PO Logo" class="h-8 w-8 object-contain" />
                     </div>
                     <div class="leading-tight">
-                        <p class="text-xs uppercase tracking-[0.28em] text-neutral-400">PO Monitor</p>
-
-                        <p class="text-[11px] text-neutral-500">Ref: {{ activePoNumber || detailHeader?.po_no || '-' }}
-                        </p>
+                        <p class="text-[11px] uppercase tracking-[0.28em] text-neutral-400">PO Monitor</p>
+                        <p class="text-[10px] text-neutral-500">Ref: {{ activePoNumber || detailHeader?.po_no || '-' }}</p>
                     </div>
                 </div>
 
                 <div class="flex flex-wrap items-start justify-between gap-4 pb-3">
                     <div class="space-y-1">
                         <p class="text-[11px] font-semibold uppercase tracking-[0.4em] text-neutral-400">
-                            PO Details
+                            Purchase Order
                         </p>
-                        <p class="text-2xl font-semibold text-neutral-900">
+                        <p class="text-xl font-semibold text-neutral-900">
                             {{ activePoNumber || detailHeader?.po_no || '-' }}
                         </p>
-                        <p v-if="detailHeader?.vendor_name" class="text-sm text-neutral-500">
-                            {{ detailHeader.vendor_name }}
+                        <p v-if="detailHeader?.vendor_name" class="text-xs text-neutral-500">
+                            Vendor: {{ detailHeader.vendor_name }}
                         </p>
                     </div>
                     <button type="button"
@@ -41,46 +39,46 @@
                 <div class="receipt-tear my-3"></div>
 
                 <div class="flex-1 overflow-y-auto space-y-5 py-2 pr-1">
-                    <div v-if="isLoading" class="py-8 text-center text-sm text-neutral-500">
-                        Loading details...
+                    <div v-if="isLoading" class="py-8 text-center text-xs text-neutral-500">
+                        Loading purchase order...
                     </div>
-                    <div v-else-if="detailErrorMessage" class="rounded-xl bg-red-50 p-4 text-sm text-red-600">
-                        {{ detailErrorMessage }}
+                    <div v-else-if="detailErrorMessage" class="rounded-xl bg-red-50 p-4 text-xs text-red-600">
+                        {{ detailErrorMessage || 'Unable to load details. Please try again.' }}
                     </div>
                     <div v-else-if="!poDetailEntries.length"
-                        class="rounded-xl bg-neutral-50 p-4 text-center text-sm text-neutral-500">
-                        No items found for this PO
+                        class="rounded-xl bg-neutral-50 p-4 text-center text-xs text-neutral-500">
+                        No line items for this PO.
                     </div>
                     <div v-else class="space-y-5">
                         <div class="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50/70 p-4">
-                            <div class="grid gap-4 text-sm text-neutral-600 sm:grid-cols-2">
+                            <div class="grid gap-3 text-xs text-neutral-600 sm:grid-cols-2">
                                 <div v-if="detailHeader?.po_date">
                                     <p class="text-[11px] uppercase tracking-wide text-neutral-400">PO Date</p>
-                                    <p class="text-sm font-semibold text-neutral-900">
+                                    <p class="text-xs font-semibold text-neutral-900">
                                         {{ formatThaiDate(detailHeader.po_date) }}
                                     </p>
                                 </div>
                                 <div v-if="detailHeader?.arrival_date">
                                     <p class="text-[11px] uppercase tracking-wide text-neutral-400">Delivery Date</p>
-                                    <p class="text-sm font-semibold text-neutral-900">
+                                    <p class="text-xs font-semibold text-neutral-900">
                                         {{ formatThaiDate(detailHeader.arrival_date) }}
                                     </p>
                                 </div>
                                 <div>
                                     <p class="text-[11px] uppercase tracking-wide text-neutral-400">Location</p>
-                                    <p class="text-sm font-semibold text-neutral-900">
+                                    <p class="text-xs font-semibold text-neutral-900">
                                         {{ detailHeader?.location || '-' }}
                                     </p>
                                 </div>
                                 <div>
                                     <p class="text-[11px] uppercase tracking-wide text-neutral-400">Reference</p>
-                                    <p class="text-sm font-semibold text-neutral-900">
+                                    <p class="text-xs font-semibold text-neutral-900">
                                         {{ detailHeader?.reference || '-' }}
                                     </p>
                                 </div>
                                 <div>
                                     <p class="text-[11px] uppercase tracking-wide text-neutral-400">Payment Terms</p>
-                                    <p class="text-sm font-semibold text-neutral-900">
+                                    <p class="text-xs font-semibold text-neutral-900">
                                         {{ detailHeader?.term_desc || '-' }}
                                     </p>
                                 </div>
@@ -90,11 +88,11 @@
                         <div class="rounded-2xl border border-neutral-200 shadow-[0_8px_30px_-18px_rgba(0,0,0,0.25)]">
                             <div
                                 class="flex items-center justify-between border-b border-dashed border-neutral-200 px-4 py-3">
-                                <p class="text-sm font-semibold text-neutral-800">Items</p>
-                                <p class="text-xs text-neutral-400">{{ poDetailEntries.length }} entries</p>
+                                <p class="text-sm font-semibold text-neutral-800">Line Items</p>
+                                <p class="text-xs text-neutral-400">{{ poDetailEntries.length }} lines</p>
                             </div>
                             <div class="overflow-x-auto">
-                                <table class="min-w-full text-sm">
+                                <table class="min-w-full text-xs">
                                     <thead class="po-table-head">
                                         <tr>
                                             <th>Item</th>
@@ -108,15 +106,15 @@
                                             :key="`${detail.po_no}-${detail.po_row ?? detail.item_no}`">
                                             <td>
                                                 <p class="font-medium text-neutral-900">
-                                                    {{ detail.item_desc || 'Unknown' }}
+                                                    {{ detail.item_desc || '-' }}
                                                 </p>
-                                                <p class="text-xs text-neutral-400">
+                                                <p class="text-[11px] text-neutral-400">
                                                     {{ detail.item_no || '-' }}
                                                 </p>
                                             </td>
-                                            <td>{{ detail.qty_order ?? '-' }}</td>
-                                            <td>{{ detail.order_unit || '-' }}</td>
-                                            <td>{{ detail.pr_number || '-' }}</td>
+                                            <td class="whitespace-nowrap">{{ detail.qty_order ?? '-' }}</td>
+                                            <td class="whitespace-nowrap">{{ detail.order_unit || '-' }}</td>
+                                            <td class="whitespace-nowrap">{{ detail.pr_number || '-' }}</td>
 
                                         </tr>
                                     </tbody>
