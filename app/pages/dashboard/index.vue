@@ -22,11 +22,10 @@
 
             <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div class="space-y-2">
-                    <p class="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-500">Delivery Date</p>
+                    <p class="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-500">Delivery Range</p>
                     <ClientOnly>
-                        <VueDatePicker v-model="deliveryDate" model-type="yyyy-MM-dd" :enable-time-picker="false"
-                            auto-apply :clearable="true" placeholder="Select delivery date" :teleport="true"
-                            input-class="dp-input-sm" />
+                        <Calendar v-model="deliveryRange" selectionMode="range" dateFormat="yy-mm-dd" showIcon
+                            class="w-full" inputClass="h-9 w-full rounded-lg border border-neutral-200 px-3 text-xs text-neutral-700 placeholder-neutral-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-100" />
                         <template #fallback>
                             <div class="h-10 animate-pulse rounded-lg bg-neutral-100"></div>
                         </template>
@@ -62,6 +61,21 @@
                             </summary>
                             <div
                                 class="absolute right-0 z-10 mt-2 w-64 rounded-xl border border-neutral-200 bg-white/90 p-3 text-[11px] shadow-lg">
+                                <div class="mb-2 flex items-center justify-between text-neutral-500">
+                                    <span class="font-semibold text-[10px]">{{ visibleColumnKeys.length }} / {{ totalColumns }} selected</span>
+                                    <div class="flex gap-1">
+                                        <button type="button"
+                                            class="rounded-full border border-neutral-200 px-2 py-1 text-[10px] font-semibold text-neutral-600 hover:border-neutral-300"
+                                            @click.stop.prevent="selectAllColumns">
+                                            All
+                                        </button>
+                                        <button type="button"
+                                            class="rounded-full border border-neutral-200 px-2 py-1 text-[10px] font-semibold text-neutral-600 hover:border-neutral-300"
+                                            @click.stop.prevent="clearAllColumns">
+                                            None
+                                        </button>
+                                    </div>
+                                </div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <label v-for="column in tableColumns" :key="column.key"
                                         class="flex cursor-pointer items-center gap-2 rounded-lg border border-neutral-100 px-2 py-1 text-neutral-600 hover:border-neutral-200">
@@ -109,8 +123,7 @@
 </template>
 
 <script setup>
-import { VueDatePicker } from '@vuepic/vue-datepicker'
-import '@vuepic/vue-datepicker/dist/main.css'
+import Calendar from 'primevue/calendar'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -146,6 +159,15 @@ const visibleColumnKeys = ref(tableColumns.map((column) => column.key))
 const columnsToShow = computed(() =>
     tableColumns.filter((column) => visibleColumnKeys.value.includes(column.key))
 )
+const totalColumns = computed(() => tableColumns.length)
+
+const selectAllColumns = () => {
+    visibleColumnKeys.value = tableColumns.map((column) => column.key)
+}
+
+const clearAllColumns = () => {
+    visibleColumnKeys.value = []
+}
 
 const columnStorageKey = 'dashboard-visible-columns'
 
@@ -185,15 +207,29 @@ watch(visibleColumnKeys, (value) => {
 const { apiPublic } = useApi()
 const router = useRouter()
 
-const getTodayDate = () => {
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    const day = String(now.getDate()).padStart(2, '0')
+const formatDateString = (value) => {
+    if (!value) return ''
+    const date = value instanceof Date ? value : new Date(value)
+    if (Number.isNaN(date.getTime())) return ''
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
     return `${year}-${month}-${day}`
 }
 
-const deliveryDate = ref(getTodayDate())
+const addDaysFromToday = (days) => {
+    const date = new Date()
+    date.setHours(0, 0, 0, 0)
+    date.setDate(date.getDate() + days)
+    return date
+}
+
+const getDefaultDeliveryRange = () => [
+    new Date(),
+    addDaysFromToday(7),
+]
+
+const deliveryRange = ref(getDefaultDeliveryRange())
 const team = ref(null)
 const item = ref('')
 const rows = ref([])
@@ -224,13 +260,65 @@ const teamOptions = computed(() => {
     return mapped
 })
 const firstRow = computed(() => (currentPage.value - 1) * perPage.value)
-const apiFilters = computed(() => ({
-    division: authCookie.value?.role === 'EMPLOYEE'
-        ? authCookie.value?.division
-        : team.value || undefined,
-    arrivalDate: deliveryDate.value || undefined,
-    itemDesc: item.value.trim() || undefined,
-}))
+const normalizedDeliveryRange = computed(() => {
+    const value = deliveryRange.value
+
+    const toDateString = (input) => {
+        if (!input) return null
+        return formatDateString(input) || null
+    }
+
+    if (Array.isArray(value)) {
+        const [start, end] = value
+        return {
+            startDate: toDateString(start),
+            endDate: toDateString(end),
+        }
+    }
+
+    if (value && typeof value === 'object') {
+        const start = value.start ?? value.startDate
+        const end = value.end ?? value.endDate
+        return {
+            startDate: toDateString(start),
+            endDate: toDateString(end),
+        }
+    }
+
+    if (typeof value === 'string') {
+        const separators = [' - ', ' to ', ' ถึง ']
+        let startValue = value
+        let endValue = value
+
+        for (const separator of separators) {
+            if (value.includes(separator)) {
+                const [startPart, endPart] = value.split(separator)
+                startValue = startPart?.trim()
+                endValue = endPart?.trim()
+                break
+            }
+        }
+
+        return {
+            startDate: toDateString(startValue),
+            endDate: toDateString(endValue),
+        }
+    }
+
+    return { startDate: null, endDate: null }
+})
+const apiFilters = computed(() => {
+    const { startDate, endDate } = normalizedDeliveryRange.value
+
+    return {
+        division: authCookie.value?.role === 'EMPLOYEE'
+            ? authCookie.value?.division
+            : team.value || undefined,
+        arrivalDateFrom: startDate || undefined,
+        arrivalDateTo: endDate || undefined,
+        itemDesc: item.value.trim() || undefined,
+    }
+})
 
 const fetchPlPoPl = async (page = currentPage.value, pageSize = perPage.value) => {
     isLoading.value = true
@@ -289,7 +377,7 @@ const triggerFilterFetch = () => {
 }
 
 const resetFilters = () => {
-    deliveryDate.value = getTodayDate()
+    deliveryRange.value = getDefaultDeliveryRange()
     team.value = authCookie.value?.role === 'EMPLOYEE' ? authCookie.value?.division || null : null
     item.value = ''
     triggerFilterFetch()
@@ -300,10 +388,13 @@ const handleLogout = async () => {
     await router.push('/login')
 }
 
-watch([deliveryDate, team], () => {
+watch(deliveryRange, () => {
+    triggerFilterFetch()
+}, { deep: true })
+
+watch(team, () => {
     triggerFilterFetch()
 })
-
 
 watch(item, () => {
     if (searchDebounce) clearTimeout(searchDebounce)
@@ -344,13 +435,6 @@ fetchDivisions()
 </script>
 
 <style scoped>
-:deep(.dp-input-sm) {
-    height: 2.25rem;
-    font-size: 0.85rem;
-    padding: 0 0.75rem;
-    border-radius: 0.65rem;
-}
-
 :deep(.vs-select-sm .vs__dropdown-toggle) {
     min-height: 2.25rem;
     border-radius: 0.65rem;
