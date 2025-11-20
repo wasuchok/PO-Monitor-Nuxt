@@ -21,32 +21,52 @@
             </div>
 
             <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-                <div class="space-y-2">
-                    <p class="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-500">Delivery Range</p>
-                    <ClientOnly>
-                        <Calendar v-model="deliveryRange" selectionMode="range" dateFormat="yy-mm-dd" showIcon
-                            class="w-full" inputClass="h-9 w-full rounded-lg border border-neutral-200 px-3 text-xs text-neutral-700 placeholder-neutral-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-100" />
-                        <template #fallback>
-                            <div class="h-10 animate-pulse rounded-lg bg-neutral-100"></div>
-                        </template>
-                    </ClientOnly>
+                <div class="rounded-xl border border-neutral-100 bg-white p-4 shadow-sm ring-1 ring-black/5">
+                    <div class="flex items-center justify-between gap-2">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.3em] text-neutral-500">Delivery Range</p>
+                        <span class="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-primary-600 ring-1 ring-primary-100">
+                            Today → +7d
+                        </span>
+                    </div>
+                    <p class="mt-1 text-[11px] text-neutral-400">เลือกช่วงวันที่รับของ</p>
+                    <div class="mt-3">
+                        <ClientOnly>
+                            <Calendar v-model="deliveryRange" selectionMode="range" dateFormat="yy-mm-dd" showIcon
+                                class="w-full calendar-filter" :inputClass="filterInputClass" />
+                            <template #fallback>
+                                <div class="h-10 animate-pulse rounded-lg bg-neutral-100"></div>
+                            </template>
+                        </ClientOnly>
+                    </div>
                 </div>
 
-                <div class="space-y-2">
-                    <p class="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-500">Team</p>
-                    <ClientOnly>
-                        <VSelect v-model="team" class="vs-select-sm" :options="teamOptions"
-                            :reduce="(option) => option.value" placeholder="Select team" :clearable="true" />
-                        <template #fallback>
-                            <div class="h-10 animate-pulse rounded-lg bg-neutral-100"></div>
-                        </template>
-                    </ClientOnly>
+                <div class="rounded-xl border border-neutral-100 bg-white p-4 shadow-sm ring-1 ring-black/5">
+                    <div class="flex items-center justify-between gap-2">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.3em] text-neutral-500">Team</p>
+                        <span class="text-[10px] font-semibold text-neutral-400">Division</span>
+                    </div>
+                    <p class="mt-1 text-[11px] text-neutral-400">เลือกทีมที่ต้องการดู</p>
+                    <div class="mt-3">
+                        <ClientOnly>
+                            <VSelect v-model="team" class="vs-select-sm filter-select" :options="teamOptions"
+                                :reduce="(option) => option.value" placeholder="Select team" :clearable="true" />
+                            <template #fallback>
+                                <div class="h-10 animate-pulse rounded-lg bg-neutral-100"></div>
+                            </template>
+                        </ClientOnly>
+                    </div>
                 </div>
 
-                <div class="space-y-2">
-                    <p class="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-500">Item</p>
-                    <input v-model="item" type="text" placeholder="Enter product or PO"
-                        class="h-9 w-full rounded-lg border border-neutral-200 px-3 text-xs text-neutral-700 outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100" />
+                <div class="rounded-xl border border-neutral-100 bg-white p-4 shadow-sm ring-1 ring-black/5">
+                    <div class="flex items-center justify-between gap-2">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.3em] text-neutral-500">Item</p>
+                        <span class="text-[10px] font-semibold text-neutral-400">PO / Product</span>
+                    </div>
+                    <p class="mt-1 text-[11px] text-neutral-400">ค้นหาด้วยเลข PO หรือชื่อสินค้า</p>
+                    <div class="mt-3">
+                        <input v-model="item" type="text" placeholder="Enter product or PO"
+                            :class="filterInputClass" />
+                    </div>
                 </div>
             </div>
 
@@ -223,6 +243,8 @@ const addDaysFromToday = (days) => {
     date.setDate(date.getDate() + days)
     return date
 }
+
+const filterInputClass = 'h-10 w-full rounded-lg border border-neutral-200 bg-white px-3 text-xs text-neutral-700 placeholder-neutral-400 outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100'
 
 const getDefaultDeliveryRange = () => [
     new Date(),
@@ -445,5 +467,76 @@ fetchDivisions()
 :deep(.vs-select-sm .vs__search),
 :deep(.vs-select-sm .vs__placeholder) {
     font-size: 0.85rem;
+}
+
+:deep(.filter-select .vs__dropdown-toggle) {
+    min-height: 2.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e5e5;
+    background: #ffffff;
+    box-shadow: none;
+    padding: 0 0.75rem;
+}
+
+:deep(.filter-select .vs__selected),
+:deep(.filter-select .vs__search),
+:deep(.filter-select .vs__placeholder) {
+    font-size: 0.85rem;
+    color: #374151;
+}
+
+:deep(.p-datepicker table td > span.p-highlight) {
+    background: #ee6983;
+    border-color: #ee6983;
+    color: #ffffff;
+    box-shadow: 0 0 0 2px rgba(238, 105, 131, 0.15);
+}
+
+:deep(.p-datepicker table td > span.p-highlight:hover) {
+    background: #d95a74;
+    border-color: #d95a74;
+}
+
+:deep(.p-datepicker table td > span.p-highlight.p-range-start),
+:deep(.p-datepicker table td > span.p-highlight.p-range-end) {
+    background: #ee6983;
+    border-color: #ee6983;
+}
+
+:deep(.p-datepicker table td > span.p-range-highlight) {
+    background: #fbe3ea;
+    color: #b74a64;
+    border-color: transparent;
+}
+
+:deep(.p-datepicker .p-highlight) {
+    background: #ee6983 !important;
+    border-color: #ee6983 !important;
+    color: #ffffff !important;
+}
+
+:deep(.p-datepicker .p-highlight:hover) {
+    background: #d95a74 !important;
+    border-color: #d95a74 !important;
+}
+
+:deep(.p-datepicker .p-range-highlight) {
+    background: #fbe3ea !important;
+    color: #b74a64 !important;
+    border-color: transparent !important;
+}
+
+:deep(.calendar-filter .p-inputtext) {
+    border-color: #e5e5e5 !important;
+    background-color: #ffffff;
+    border-radius: 0.75rem;
+    min-height: 2.5rem;
+    transition: box-shadow 150ms ease, border-color 150ms ease;
+}
+
+:deep(.calendar-filter .p-inputtext:focus),
+:deep(.calendar-filter .p-inputtext.p-focus) {
+    border-color: #ee6983 !important;
+    box-shadow: 0 0 0 2px rgba(238, 105, 131, 0.18) !important;
 }
 </style>
