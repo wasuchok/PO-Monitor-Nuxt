@@ -1,10 +1,15 @@
 <template>
     <section class="space-y-6">
-        <div class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+        <div class="receipt-card relative rounded-2xl border border-neutral-200 bg-white/95 p-4 shadow-sm ring-1 ring-primary-50 overflow-hidden">
             <div class="flex flex-col gap-3 border-b border-neutral-100 pb-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <p class="text-xs uppercase tracking-[0.3em] text-neutral-400">Dashboard</p>
                     <h1 class="text-lg font-semibold text-neutral-900">PO Overview</h1>
+                    <div class="mt-1 flex flex-wrap gap-2 text-[11px] text-neutral-500">
+                        <span class="filter-chip">Date: {{ rangeLabel }}</span>
+                        <span class="filter-chip">Team: {{ teamLabel }}</span>
+                        <span class="filter-chip">Item: {{ itemLabel }}</span>
+                    </div>
                 </div>
                 <div class="flex flex-wrap gap-2">
                     <button type="button"
@@ -19,6 +24,8 @@
                     </button>
                 </div>
             </div>
+
+            <div class="receipt-tear my-3"></div>
 
             <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div class="rounded-xl border border-neutral-100 bg-white p-4 shadow-sm ring-1 ring-black/5">
@@ -69,6 +76,8 @@
                     </div>
                 </div>
             </div>
+
+            <div class="receipt-tear my-4"></div>
 
             <ClientOnly>
                 <div class="relative rounded-md  p-3">
@@ -250,6 +259,21 @@ const getDefaultDeliveryRange = () => [
     new Date(),
     addDaysFromToday(7),
 ]
+
+const rangeLabel = computed(() => {
+    const { startDate, endDate } = normalizedDeliveryRange.value
+    if (startDate && endDate) return `${startDate} → ${endDate}`
+    if (startDate) return startDate
+    if (endDate) return endDate
+    return 'All dates'
+})
+
+const teamLabel = computed(() => {
+    if (authCookie.value?.role === 'EMPLOYEE') return authCookie.value?.division || 'Your division'
+    return team.value || 'All teams'
+})
+
+const itemLabel = computed(() => item.value.trim() || 'Any item')
 
 const deliveryRange = ref(getDefaultDeliveryRange())
 const team = ref(null)
@@ -538,5 +562,48 @@ fetchDivisions()
 :deep(.calendar-filter .p-inputtext.p-focus) {
     border-color: #ee6983 !important;
     box-shadow: 0 0 0 2px rgba(238, 105, 131, 0.18) !important;
+}
+
+.receipt-card {
+    position: relative;
+    background-image: radial-gradient(circle at 1px 1px, rgba(238, 105, 131, 0.02) 1px, transparent 0);
+    background-size: 12px 12px;
+}
+
+.receipt-card::before,
+.receipt-card::after {
+    content: '';
+    position: absolute;
+    top: 14px;
+    bottom: 14px;
+    width: 10px;
+    background: radial-gradient(circle at 5px 8px, transparent 6px, #ffffff 6px, #ffffff 7px, transparent 7px) center/10px 18px repeat-y;
+    pointer-events: none;
+}
+
+.receipt-card::before {
+    left: -6px;
+}
+
+.receipt-card::after {
+    right: -6px;
+}
+
+.receipt-tear {
+    height: 12px;
+    background:
+        radial-gradient(circle at 12px 6px, transparent 6px, #f2d5dd 6px, #f2d5dd 7px, transparent 7px) left/24px 12px repeat-x,
+        linear-gradient(to right, transparent 0, transparent 100%);
+}
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #fdf2f6;
+    color: #b74a64;
+    border: 1px dashed #f2d5dd;
 }
 </style>
