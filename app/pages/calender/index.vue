@@ -24,7 +24,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-500">รายการถัดไป</p>
-                        <p class="text-xs text-neutral-400">ที่กำลังจะถึง 5 รายการ</p>
+                        <p class="text-xs text-neutral-400">รายการ PO ที่เปิดอยู่ 5 รายการวันนี้</p>
                     </div>
 
                 </div>
@@ -315,9 +315,8 @@ const calendarConfig: any = {
     },
     isSilent: true,
     style: {
-        // บังคับ light mode และปรับสีพื้นหลังให้ขาว/อ่อนถ้าต้องการ
         colorSchemes: {
-            default: { color: '#000', backgroundColor: '#fff' } // สีเริ่มต้นสำหรับ events
+            default: { color: '#000', backgroundColor: '#fff' }
         }
     }
 }
