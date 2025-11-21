@@ -65,14 +65,15 @@
 
 <script setup lang="ts">
 import Swal from 'sweetalert2'
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 definePageMeta({
     layout: false,
 })
 
 const router = useRouter()
+const route = useRoute()
 const { apiPublic } = useApi()
 const authCookie = useCookie('po-auth', {
     maxAge: 60 * 60 * 24 * 30,
@@ -93,6 +94,19 @@ const printedAt = computed(() =>
 )
 
 const canSubmit = computed(() => employeeId.value.trim() !== '' && password.value.trim() !== '')
+const redirectPath = computed(() => {
+    const redirect = route.query?.redirect
+    if (typeof redirect === 'string' && redirect.startsWith('/')) {
+        return redirect
+    }
+    return '/dashboard'
+})
+
+onMounted(() => {
+    if (authCookie.value) {
+        router.replace(redirectPath.value)
+    }
+})
 
 const handleLogin = async () => {
     if (!canSubmit.value || isSubmitting.value) return
@@ -122,7 +136,7 @@ const handleLogin = async () => {
             confirmButtonText: 'Continue',
         })
 
-        await router.push('/dashboard')
+        await router.push(redirectPath.value)
     } catch (error: any) {
         console.error(error)
         errorMessage.value =

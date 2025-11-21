@@ -82,6 +82,10 @@ import { computed, onMounted, ref, watch } from 'vue'
 import PoDetailModal from '~/components/po/PoDetailModal.vue'
 import type { CalendarApiResponse, CalendarEntry, CalendarEvent, PoDetailEntry } from '~/types/purchase-orders'
 
+definePageMeta({
+    middleware: 'auth',
+})
+
 type QalendarPeriodPayload = {
     start?: Date
     end?: Date

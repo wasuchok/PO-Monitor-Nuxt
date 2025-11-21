@@ -164,6 +164,10 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import VSelect from 'vue-select'
 import 'vue-select/dist/vue-select.css'
 
+definePageMeta({
+    middleware: 'auth',
+})
+
 const STATUS_LOOKUP = {
     1: 'Open',
     2: 'Approve',

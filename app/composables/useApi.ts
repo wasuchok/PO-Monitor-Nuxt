@@ -26,7 +26,7 @@ const createInstance = (overrides?: AxiosRequestConfig): AxiosInstance => {
     typeof runtimeConfig.public?.apiBase === 'string'
       ? runtimeConfig.public.apiBase
       : undefined
-  const baseURL = overrides?.baseURL ?? apiBase ?? 'http://localhost:8000/api/v1'
+  const baseURL = overrides?.baseURL ?? apiBase ?? 'http://10.17.2.3:4000/api/v1'
 
   const instance = axios.create({
     baseURL,
